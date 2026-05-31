@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raffle Royale — Prize Showcase</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #080810;
+            color: #fff;
+            font-family: Georgia, 'Times New Roman', serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 15% 15%, rgba(255,215,0,0.06) 0%, transparent 55%),
+                radial-gradient(ellipse at 85% 85%, rgba(140,0,255,0.06) 0%, transparent 55%),
+                radial-gradient(ellipse at 50% 50%, rgba(255,60,60,0.03) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 24px 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── HEADER ── */
+        .header { text-align: center; margin-bottom: 52px; }
+
+        .header-eyebrow {
+            text-transform: uppercase;
+            letter-spacing: 7px;
+            color: #FFD700;
+            font-size: 0.78rem;
+            font-family: Arial, sans-serif;
+            margin-bottom: 14px;
+            opacity: 0.85;
+        }
+
+        .header-title {
+            font-size: clamp(3.2rem, 9vw, 6.5rem);
+            font-weight: bold;
+            background: linear-gradient(160deg, #ffe566 0%, #FFD700 40%, #FFA500 70%, #ff8c00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 6px;
+            line-height: 1;
+            margin-bottom: 18px;
+        }
+
+        .divider {
+            width: 220px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #FFD700, transparent);
+            margin: 0 auto 18px;
+        }
+
+        .header-tagline {
+            color: rgba(255,255,255,0.5);
+            font-size: 1.05rem;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .header-instruction {
+            color: #FFD700;
+            font-size: 0.82rem;
+            opacity: 0.7;
+            font-family: Arial, sans-serif;
+            letter-spacing: 1px;
+        }
+
+        /* ── STATS BAR ── */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            margin-bottom: 52px;
+            flex-wrap: wrap;
+        }
+
+        .stat { text-align: center; }
+
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #FFD700;
+            display: block;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: rgba(255,255,255,0.35);
+            font-family: Arial, sans-serif;
+        }
+
+        .stat-divider {
+            width: 1px;
+            background: rgba(255,215,0,0.2);
+            align-self: stretch;
+        }
+
+        /* ── PRIZE GRID ── */
+        .prize-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 60px;
+        }
+
+        /* ── CARD FLIP ── */
+        .card-wrapper {
+            perspective: 1200px;
+            height: 250px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-wrapper.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front,
+        .card-back {
+            position: absolute;
+            inset: 0;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 14px;
+            padding: 22px;
+            border: 1px solid rgba(255,215,0,0.18);
+            overflow: hidden;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            overflow-y: auto;
+        }
+
+        /* Scrollbar */
+        .card-back::-webkit-scrollbar { width: 3px; }
+        .card-back::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.25); border-radius: 3px; }
+
+        /* Front color themes */
+        .theme-gold   { background: linear-gradient(145deg, #120e00, #1f1800); border-color: rgba(255,215,0,0.45); }
+        .theme-teal   { background: linear-gradient(145deg, #001515, #002222); border-color: rgba(0,210,210,0.38); }
+        .theme-purple { background: linear-gradient(145deg, #130025, #200040); border-color: rgba(175,0,255,0.38); }
+        .theme-blue   { background: linear-gradient(145deg, #001228, #001e3e); border-color: rgba(0,130,255,0.38); }
+        .theme-orange { background: linear-gradient(145deg, #160800, #231200); border-color: rgba(255,110,0,0.38); }
+        .theme-silver { background: linear-gradient(145deg, #0e1018, #161b26); border-color: rgba(180,190,220,0.38); }
+        .theme-brown  { background: linear-gradient(145deg, #130b00, #201300); border-color: rgba(170,90,10,0.38); }
+        .theme-green  { background: linear-gradient(145deg, #001500, #002200); border-color: rgba(0,200,90,0.38); }
+        .theme-indigo { background: linear-gradient(145deg, #0b0030, #14004a); border-color: rgba(110,80,255,0.38); }
+        .theme-red    { background: linear-gradient(145deg, #180000, #260000); border-color: rgba(255,40,40,0.38); }
+
+        .card-back { background: linear-gradient(145deg, #0d1117, #141920); border-color: rgba(255,215,0,0.25); }
+
+        /* Glow on hover */
+        .card-wrapper:hover .card-front { box-shadow: 0 0 28px rgba(255,215,0,0.12); }
+
+        /* Front elements */
+        .card-badge {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: rgba(255,215,0,0.12);
+            border: 1px solid rgba(255,215,0,0.35);
+            color: #FFD700;
+            font-size: 0.62rem;
+            padding: 3px 9px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-family: Arial, sans-serif;
+        }
+
+        .card-icon {
+            font-size: 2.6rem;
+            display: block;
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+
+        .card-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 8px;
+            line-height: 1.25;
+            padding-right: 60px;
+        }
+
+        .card-tagline {
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.52);
+            font-style: italic;
+            line-height: 1.45;
+        }
+
+        .flip-hint {
+            position: absolute;
+            bottom: 13px;
+            right: 14px;
+            color: rgba(255,215,0,0.4);
+            font-size: 0.62rem;
+            letter-spacing: 1px;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Back elements */
+        .back-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .back-icon { font-size: 1.4rem; line-height: 1; }
+
+        .back-title {
+            font-size: 0.98rem;
+            font-weight: bold;
+            color: #FFD700;
+            line-height: 1.2;
+        }
+
+        .back-badge {
+            display: inline-block;
+            background: rgba(255,215,0,0.1);
+            border: 1px solid rgba(255,215,0,0.28);
+            color: #FFD700;
+            font-size: 0.6rem;
+            padding: 2px 9px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            font-family: Arial, sans-serif;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .back-description {
+            font-size: 0.77rem;
+            color: rgba(255,255,255,0.62);
+            font-style: italic;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .includes-label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            color: #FFD700;
+            font-family: Arial, sans-serif;
+            margin-bottom: 7px;
+            opacity: 0.8;
+        }
+
+        .includes-list { list-style: none; }
+
+        .includes-list li {
+            font-size: 0.77rem;
+            color: rgba(255,255,255,0.82);
+            padding: 3px 0 3px 16px;
+            position: relative;
+            line-height: 1.4;
+            font-family: Arial, sans-serif;
+        }
+
+        .includes-list li::before {
+            content: '♦';
+            position: absolute;
+            left: 0;
+            color: #FFD700;
+            font-size: 0.55rem;
+            top: 5px;
+        }
+
+        .back-close {
+            margin-top: 10px;
+            font-size: 0.62rem;
+            color: rgba(255,215,0,0.35);
+            text-align: right;
+            font-family: Arial, sans-serif;
+            letter-spacing: 1px;
+        }
+
+        /* ── SPARKLE ── */
+        @keyframes sparkle-float {
+            0%   { opacity: 0; transform: scale(0) translateY(0); }
+            30%  { opacity: 1; transform: scale(1) translateY(-8px); }
+            100% { opacity: 0; transform: scale(0.6) translateY(-24px); }
+        }
+
+        .sparkle {
+            position: fixed;
+            pointer-events: none;
+            font-size: 1rem;
+            animation: sparkle-float 0.9s ease-out forwards;
+            z-index: 9999;
+        }
+
+        /* ── FOOTER ── */
+        .footer {
+            text-align: center;
+            color: rgba(255,255,255,0.2);
+            font-size: 0.72rem;
+            font-family: Arial, sans-serif;
+            letter-spacing: 1px;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 580px) {
+            .prize-grid { grid-template-columns: 1fr; }
+            .card-wrapper { height: 240px; }
+            .stats-bar { gap: 28px; }
+            .stat-divider { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <header class="header">
+        <p class="header-eyebrow">SuperTeam Program Mentors &nbsp;·&nbsp; 2026</p>
+        <h1 class="header-title">RAFFLE ROYALE</h1>
+        <div class="divider"></div>
+        <p class="header-tagline">Ten prizes. One shot. May the odds be ever in your favor.</p>
+        <p class="header-instruction">✦ &nbsp; Click any prize card to reveal what's inside &nbsp; ✦</p>
+    </header>
+
+    <div class="stats-bar">
+        <div class="stat">
+            <span class="stat-number">10</span>
+            <span class="stat-label">Prize Packages</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+            <span class="stat-number">29</span>
+            <span class="stat-label">Total Winners</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+            <span class="stat-number">120</span>
+            <span class="stat-label">Mentors Competing</span>
+        </div>
+    </div>
+
+    <div class="prize-grid" id="prizeGrid"></div>
+
+    <footer class="footer">
+        SuperTeam Raffle Royale &nbsp;·&nbsp; Program Mentor Engagement Initiative &nbsp;·&nbsp; All prizes non-transferable
+    </footer>
+</div>
+
+<script>
+    const prizes = [
+        {
+            icon: '🎫',
+            theme: 'theme-gold',
+            name: 'The Golden Ticket',
+            tagline: 'The most valuable currency: a day that\'s entirely yours.',
+            description: 'Win a full day off without touching your FTO balance.',
+            winners: 5,
+            includes: [
+                '1 Free FTO Day — a full day off, completely on the house'
+            ]
+        },
+        {
+            icon: '⏱️',
+            theme: 'theme-teal',
+            name: 'The Clock-Out Collection',
+            tagline: 'Because time is the real luxury.',
+            description: 'A "buy back your time" bundle designed to give mentors a little breathing room.',
+            winners: 3,
+            includes: [
+                '2-Hour Pass — come in late or leave early',
+                'Leave-Early Friday Pass for your entire team',
+                'Nap Pass (1 hour)',
+                'Camera-Off Pass for one meeting'
+            ]
+        },
+        {
+            icon: '👑',
+            theme: 'theme-purple',
+            name: 'Vegas Main Character Energy',
+            tagline: 'The VIP treatment you\'ve earned.',
+            description: 'A Summit-themed VIP experience for mentors ready to fully embrace the Vegas vibe.',
+            winners: 3,
+            includes: [
+                'Reserved breakfast table (one morning)',
+                'Crown + sash',
+                'Casino chip',
+                'Hotel snack basket'
+            ]
+        },
+        {
+            icon: '🎽',
+            theme: 'theme-blue',
+            name: 'Mentor Merch Drop',
+            tagline: 'Classic WGU swag + comfort package.',
+            description: 'Fresh WGU gear to rep your mentor status in style.',
+            winners: 2,
+            includes: [
+                'WGU t-shirt',
+                'Notebook',
+                'Mousepad',
+                'Socks'
+            ]
+        },
+        {
+            icon: '🦕',
+            theme: 'theme-orange',
+            name: 'Manager Mascot Mayhem',
+            tagline: 'Payback has never looked this good.',
+            description: 'Your manager must wear an inflatable costume to breakfast one morning at Summit.',
+            winners: 3,
+            includes: [
+                'Manager in a full inflatable costume at breakfast',
+                'Photo evidence required',
+                'Bragging rights: priceless'
+            ]
+        },
+        {
+            icon: '🎬',
+            theme: 'theme-silver',
+            name: 'Scott Pulsipher Cameo',
+            tagline: 'A message from the top — just for you.',
+            description: 'A personalized cameo-style video from WGU President Scott Pulsipher.',
+            winners: 1,
+            includes: [
+                'Personalized video message from Scott Pulsipher',
+                'Yours to keep and share'
+            ]
+        },
+        {
+            icon: '☕',
+            theme: 'theme-brown',
+            name: 'The Brew Crew with Casey',
+            tagline: 'Good coffee. Better conversation.',
+            description: 'A casual networking and connection experience with Casey.',
+            winners: 1,
+            includes: [
+                'Coffee & chat with Casey',
+                'Bring one friend along'
+            ]
+        },
+        {
+            icon: '💚',
+            theme: 'theme-green',
+            name: 'Pay It Forward Power Pack',
+            tagline: 'Spread the love. Share the energy.',
+            description: 'A kindness-focused package designed to spread encouragement and positive energy across teams.',
+            winners: 1,
+            includes: [
+                '$20 MOTO spend',
+                'Peer Spotlight Pass',
+                'Send-a-Teammate-Home-Early Pass',
+                'Personalized "Pay It Forward" Playbook'
+            ]
+        },
+        {
+            icon: '📚',
+            theme: 'theme-indigo',
+            name: 'Level Up Library Pack',
+            tagline: 'Invest in yourself. Grow beyond the role.',
+            description: 'A professional growth + reflection package to fuel your next chapter.',
+            winners: 5,
+            includes: [
+                'Amazon book of your choice',
+                'Personalized encouragement note from your manager',
+                'Focus & Reflect Coupon (1 hour)',
+                'Inspirational quote cards'
+            ]
+        },
+        {
+            icon: '👨‍🍳',
+            theme: 'theme-red',
+            name: 'Snackin\' with Solomon',
+            tagline: 'Food is community. Community is everything.',
+            description: 'Food + connection package centered around cooking and community.',
+            winners: 1,
+            includes: [
+                'Solomon\'s 5 favorite recipes',
+                'Grocery gift card',
+                '1:1 with Solomon',
+                '"Sous Chef" certificate'
+            ]
+        }
+    ];
+
+    function pluralize(n, word) {
+        return n === 1 ? `${n} ${word}` : `${n} ${word}s`;
+    }
+
+    function buildCard(prize) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'card-wrapper';
+
+        wrapper.innerHTML = `
+            <div class="card-inner">
+                <div class="card-front ${prize.theme}">
+                    <div class="card-badge">${pluralize(prize.winners, 'winner')}</div>
+                    <span class="card-icon">${prize.icon}</span>
+                    <div class="card-name">${prize.name}</div>
+                    <div class="card-tagline">${prize.tagline}</div>
+                    <div class="flip-hint">tap to reveal ✦</div>
+                </div>
+                <div class="card-back">
+                    <div class="back-header">
+                        <span class="back-icon">${prize.icon}</span>
+                        <div class="back-title">${prize.name}</div>
+                    </div>
+                    <div class="back-badge">${pluralize(prize.winners, 'winner')}</div>
+                    <div class="back-description">${prize.description}</div>
+                    <div class="includes-label">What's Inside</div>
+                    <ul class="includes-list">
+                        ${prize.includes.map(i => `<li>${i}</li>`).join('')}
+                    </ul>
+                    <div class="back-close">tap to close ✦</div>
+                </div>
+            </div>
+        `;
+
+        wrapper.addEventListener('click', () => {
+            const flipping = !wrapper.classList.contains('flipped');
+            wrapper.classList.toggle('flipped');
+            if (flipping) spawnSparkles(wrapper);
+        });
+
+        return wrapper;
+    }
+
+    function spawnSparkles(el) {
+        const rect = el.getBoundingClientRect();
+        const symbols = ['✦', '★', '♦', '◆', '✸'];
+        const colors  = ['#FFD700', '#FFA500', '#ffffff', '#ff9dce', '#a78bfa'];
+        for (let i = 0; i < 7; i++) {
+            setTimeout(() => {
+                const s = document.createElement('div');
+                s.className = 'sparkle';
+                s.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                s.style.left = (rect.left + Math.random() * rect.width) + 'px';
+                s.style.top  = (rect.top  + Math.random() * rect.height * 0.6) + 'px';
+                s.style.color = colors[Math.floor(Math.random() * colors.length)];
+                s.style.fontSize = (0.7 + Math.random() * 0.8) + 'rem';
+                document.body.appendChild(s);
+                setTimeout(() => s.remove(), 950);
+            }, i * 70);
+        }
+    }
+
+    const grid = document.getElementById('prizeGrid');
+    prizes.forEach(p => grid.appendChild(buildCard(p)));
+</script>
+</body>
+</html>
