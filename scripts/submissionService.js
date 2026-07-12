@@ -9,14 +9,18 @@ const SubmissionService = {
     validateSubmissionEntry(normalizedEntry, getSavedSubmissions());
     delete normalizedEntry.rawAllocationKeys;
 
-    const mode = SUBMISSION_CONFIG?.mode === "api" ? "api" : "local";
+    const storageMode = SUBMISSION_CONFIG?.storageMode === "local" ? "local" : "database";
 
-    if (mode === "api") {
+    if (storageMode === "database") {
       await submitToApi(normalizedEntry);
+      if (SUBMISSION_CONFIG?.mirrorLocalStorageOnSuccess) {
+        saveSubmission(normalizedEntry);
+      }
+      console.log("[SubmissionService] Saved entry (database)", normalizedEntry);
+    } else {
+      saveSubmission(normalizedEntry);
+      console.log("[SubmissionService] Saved entry (local)", normalizedEntry);
     }
-
-    saveSubmission(normalizedEntry);
-    console.log(`[SubmissionService] Saved entry (${mode})`, normalizedEntry);
 
     return {
       ok: true,
@@ -200,7 +204,7 @@ function sumAllocationCounts(allocations) {
 }
 
 async function submitToApi(entry) {
-  const endpoint = String(SUBMISSION_CONFIG?.apiEndpoint || "").trim();
+  const endpoint = String(SUBMISSION_CONFIG?.apiEndpoint || "/api/submissions").trim();
 
   if (!endpoint) {
     throw buildSubmissionError("API_ENDPOINT_MISSING", "Submission mode is api but apiEndpoint is empty.");
@@ -234,10 +238,20 @@ async function submitToApi(entry) {
   }
 
   if (!response.ok) {
+    let responseBody = null;
+    try {
+      responseBody = await response.json();
+    } catch {
+      responseBody = null;
+    }
+
     throw buildSubmissionError(
       "API_HTTP_ERROR",
       `Submission API request failed (${response.status}).`,
-      { status: response.status }
+      {
+        status: response.status,
+        responseBody
+      }
     );
   }
 }

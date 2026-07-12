@@ -45,9 +45,11 @@ const APP_MODE = PILOT_MODE ? "pilot" : "live";
 // Submission mode is local by default for MVP intake testing.
 // Switch mode to "api" and set apiEndpoint when backend is ready.
 const SUBMISSION_CONFIG = {
-  mode: "local", // "local" | "api"
-  apiEndpoint: "",
-  apiHealthEndpoint: "",
+  mode: "api", // "local" | "api"
+  apiEndpoint: "/api/submissions",
+  apiHealthEndpoint: "/api/db-health",
+  storageMode: "database", // "database" | "local"
+  mirrorLocalStorageOnSuccess: true,
   eventId: "raffle-royale-2026",
   sourceAppVersion: "v1"
 };

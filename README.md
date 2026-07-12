@@ -131,6 +131,35 @@ Local storage keys used:
 Add a small backend submission API that keeps the same submitEntry contract and writes to a shared data store (for example Microsoft Lists) using server-side credentials only.
 Do not put credentials in frontend JavaScript.
 
+## Phase 1 Database Setup (Neon + Vercel)
+
+Phase 1 adds only infrastructure validation and does not change participant or admin behavior.
+
+Files added in this phase:
+
+- package.json
+- api/db-health.js
+- sql/001_create_submissions.sql
+
+Manual setup required:
+
+1. Provision Neon Postgres through the Vercel Marketplace and attach it to this project.
+2. In Vercel project settings, verify a database connection variable exists.
+3. Ensure DATABASE_URL is configured in the target environment (Production/Preview/Development).
+4. Run sql/001_create_submissions.sql in Neon SQL Editor.
+
+Health test endpoint:
+
+- GET /api/db-health
+
+Expected JSON response:
+
+- ok
+- database
+- timestamp
+
+The endpoint intentionally does not return connection details, usernames, hostnames, or environment values.
+
 ## Pilot Test Checklist (Nontechnical)
 
 1. Confirm Pilot Test label appears on participant and admin screens.
