@@ -1,5 +1,4 @@
 const NAME_FORMAT = /^[A-Za-z]+(?:[\-'][A-Za-z]+)?\s+[A-Za-z]\.?$/;
-const ADMIN_EXPORT_CODE = "raffle-admin";
 const RESET_BROWSER_CONFIRMATION_ONE = "Pilot testing only: this will clear this browser's submission-completed status and assign a new participant ID. Continue?";
 const RESET_BROWSER_CONFIRMATION_TWO = "Confirm browser reset for pilot testing. Admin submissions will remain intact.";
 const CLEAR_ALL_CONFIRMATION_ONE = "WARNING: This will permanently delete all locally stored pilot submissions and pilot logs for this browser. Continue?";
@@ -19,6 +18,16 @@ const state = {
   lastApiHealthCheck: null,
   apiHealthHistory: getSavedApiHealthHistory(),
   isCheckingApiHealth: false,
+  adminAuthChecking: false,
+  adminSigningIn: false,
+  adminSigningOut: false,
+  adminLoadingShared: false,
+  adminAuthenticated: false,
+  adminSessionExpiresAt: "",
+  adminSharedSubmissions: [],
+  adminLoadErrorCode: "",
+  adminLoadError: "",
+  adminUseLocalPilotData: false,
   notice: ""
 };
 
@@ -463,6 +472,215 @@ function recordApiHealthResult(result) {
   saveApiHealthHistory(state.apiHealthHistory);
 }
 
+async function requestJson(url, options = {}) {
+  const response = await fetch(url, {
+    cache: "no-store",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data
+  };
+}
+
+async function checkAdminSessionStatus() {
+  state.adminAuthChecking = true;
+
+  if (state.step === "adminExport") {
+    renderAdminExportStep();
+  }
+
+  try {
+    const result = await requestJson("/api/admin/session", { method: "GET" });
+
+    if (result.ok) {
+      state.adminAuthenticated = true;
+      state.adminSessionExpiresAt = String(result.data?.expiresAt || "");
+      state.adminLoadErrorCode = "";
+      return { ok: true };
+    }
+
+    state.adminAuthenticated = false;
+    state.adminSessionExpiresAt = "";
+
+    if (result.status === 401) {
+      state.adminLoadErrorCode = "SESSION_MISSING_OR_EXPIRED";
+      state.adminLoadError = "Organizer session missing or expired. Sign in again to load shared submissions.";
+      return { ok: false, code: "SESSION_MISSING_OR_EXPIRED" };
+    }
+
+    state.adminLoadErrorCode = "ADMIN_SESSION_UNAVAILABLE";
+    state.adminLoadError = "Admin session check is unavailable right now.";
+    return { ok: false, code: "ADMIN_SESSION_UNAVAILABLE" };
+  } catch {
+    state.adminAuthenticated = false;
+    state.adminSessionExpiresAt = "";
+    state.adminLoadErrorCode = "ADMIN_SESSION_UNAVAILABLE";
+    state.adminLoadError = "Admin session check is unavailable right now.";
+    return { ok: false, code: "ADMIN_SESSION_UNAVAILABLE" };
+  } finally {
+    state.adminAuthChecking = false;
+    if (state.step === "adminExport") {
+      renderAdminExportStep();
+    }
+  }
+}
+
+async function signInOrganizer(code) {
+  state.adminSigningIn = true;
+  if (state.step === "adminExport") {
+    renderAdminExportStep();
+  }
+
+  try {
+    const result = await requestJson("/api/admin/session", {
+      method: "POST",
+      body: JSON.stringify({ code })
+    });
+
+    if (!result.ok) {
+      if (result.status === 401) {
+        return { ok: false, code: "INVALID_CODE", message: "Organizer code is incorrect." };
+      }
+
+      return { ok: false, code: "SIGN_IN_UNAVAILABLE", message: "Organizer sign-in is unavailable right now." };
+    }
+
+    state.adminAuthenticated = true;
+    state.adminSessionExpiresAt = String(result.data?.expiresAt || "");
+    state.adminLoadErrorCode = "";
+    state.adminLoadError = "";
+
+    return { ok: true };
+  } catch {
+    return { ok: false, code: "SIGN_IN_UNAVAILABLE", message: "Organizer sign-in is unavailable right now." };
+  } finally {
+    state.adminSigningIn = false;
+    if (state.step === "adminExport") {
+      renderAdminExportStep();
+    }
+  }
+}
+
+async function signOutOrganizer() {
+  state.adminSigningOut = true;
+  if (state.step === "adminExport") {
+    renderAdminExportStep();
+  }
+
+  try {
+    await requestJson("/api/admin/session", { method: "DELETE" });
+  } finally {
+    state.adminSigningOut = false;
+    state.adminAuthenticated = false;
+    state.adminSessionExpiresAt = "";
+    state.adminSharedSubmissions = [];
+    state.adminUseLocalPilotData = false;
+    state.adminLoadErrorCode = "SESSION_MISSING_OR_EXPIRED";
+    state.adminLoadError = "Signed out. Sign in again to load shared submissions.";
+
+    if (state.step === "adminExport") {
+      renderAdminExportStep();
+    }
+  }
+}
+
+async function loadSharedAdminSubmissions() {
+  state.adminLoadingShared = true;
+  state.adminLoadError = "";
+  state.adminLoadErrorCode = "";
+  state.adminUseLocalPilotData = false;
+
+  if (state.step === "adminExport") {
+    renderAdminExportStep();
+  }
+
+  try {
+    const result = await requestJson("/api/admin/submissions", { method: "GET" });
+
+    if (result.ok) {
+      state.adminAuthenticated = true;
+      state.adminSharedSubmissions = Array.isArray(result.data?.entries) ? result.data.entries : [];
+      return { ok: true };
+    }
+
+    state.adminSharedSubmissions = [];
+
+    if (result.status === 401) {
+      state.adminAuthenticated = false;
+      state.adminSessionExpiresAt = "";
+      state.adminLoadErrorCode = "SESSION_MISSING_OR_EXPIRED";
+      state.adminLoadError = "Organizer session missing or expired. Sign in again to load shared submissions.";
+      return { ok: false, code: "SESSION_MISSING_OR_EXPIRED" };
+    }
+
+    state.adminLoadErrorCode = "ADMIN_SUBMISSIONS_UNAVAILABLE";
+    state.adminLoadError = "Shared submissions could not be loaded right now.";
+    return { ok: false, code: "ADMIN_SUBMISSIONS_UNAVAILABLE" };
+  } catch {
+    state.adminSharedSubmissions = [];
+    state.adminLoadErrorCode = "ADMIN_SUBMISSIONS_UNAVAILABLE";
+    state.adminLoadError = "Shared submissions could not be loaded right now.";
+    return { ok: false, code: "ADMIN_SUBMISSIONS_UNAVAILABLE" };
+  } finally {
+    state.adminLoadingShared = false;
+    if (state.step === "adminExport") {
+      renderAdminExportStep();
+    }
+  }
+}
+
+async function openAdminExportFlow(onInvalidCode) {
+  const session = await checkAdminSessionStatus();
+
+  if (!session.ok && session.code !== "SESSION_MISSING_OR_EXPIRED") {
+    setNotice("Admin sign-in check is unavailable right now.");
+    render();
+    return;
+  }
+
+  if (!session.ok) {
+    const code = window.prompt("Enter organizer admin code:", "");
+    if (!code) {
+      return;
+    }
+
+    const signIn = await signInOrganizer(code);
+    if (!signIn.ok) {
+      const message = signIn.code === "INVALID_CODE"
+        ? "Organizer code was incorrect."
+        : "Organizer sign-in is unavailable right now.";
+
+      if (typeof onInvalidCode === "function") {
+        onInvalidCode(message);
+      } else {
+        setNotice(message);
+        render();
+      }
+      return;
+    }
+  }
+
+  setNotice("");
+  state.step = "adminExport";
+  render();
+
+  await loadSharedAdminSubmissions();
+}
+
 function renderParticipantCompletedStep() {
   const completion = state.participantCompletion;
   const submittedAtText = completion ? new Date(completion.submittedAt).toLocaleString() : "";
@@ -493,17 +711,11 @@ function renderParticipantCompletedStep() {
     </main>
   `;
 
-  document.getElementById("open-admin-from-lock-btn").addEventListener("click", () => {
-    const code = window.prompt("Enter admin export code:", "");
-    if (code !== ADMIN_EXPORT_CODE) {
-      setNotice("Admin code was incorrect.");
+  document.getElementById("open-admin-from-lock-btn").addEventListener("click", async () => {
+    await openAdminExportFlow((message) => {
+      setNotice(message);
       renderParticipantCompletedStep();
-      return;
-    }
-
-    setNotice("");
-    state.step = "adminExport";
-    render();
+    });
   });
 
   document.getElementById("reset-browser-btn").addEventListener("click", () => {
@@ -576,16 +788,10 @@ function renderNameStep(errorMessage = "") {
     render();
   });
 
-  document.getElementById("open-admin-btn").addEventListener("click", () => {
-    const code = window.prompt("Enter admin export code:", "");
-    if (code !== ADMIN_EXPORT_CODE) {
-      renderNameStep("Admin code was incorrect.");
-      return;
-    }
-
-    setNotice("");
-    state.step = "adminExport";
-    render();
+  document.getElementById("open-admin-btn").addEventListener("click", async () => {
+    await openAdminExportFlow((message) => {
+      renderNameStep(message);
+    });
   });
 }
 
@@ -825,17 +1031,11 @@ function renderConfirmationStep() {
     </main>
   `;
 
-  document.getElementById("open-admin-btn").addEventListener("click", () => {
-    const code = window.prompt("Enter admin export code:", "");
-    if (code !== ADMIN_EXPORT_CODE) {
-      setNotice("Admin code was incorrect.");
+  document.getElementById("open-admin-btn").addEventListener("click", async () => {
+    await openAdminExportFlow((message) => {
+      setNotice(message);
       renderConfirmationStep();
-      return;
-    }
-
-    setNotice("");
-    state.step = "adminExport";
-    render();
+    });
   });
 
   document.getElementById("new-entry-btn").addEventListener("click", () => {
@@ -847,7 +1047,7 @@ function renderConfirmationStep() {
 }
 
 function renderAdminExportStep() {
-  const submissions = getSavedSubmissions();
+  const submissions = state.adminUseLocalPilotData ? getSavedSubmissions() : state.adminSharedSubmissions;
   const standardCsv = buildAdminExportCsv(submissions);
   const ticketPoolCsv = buildTicketPoolCsv(submissions);
   const standardRows = buildAdminExportRows(submissions);
@@ -857,6 +1057,15 @@ function renderAdminExportStep() {
   const apiMode = SUBMISSION_CONFIG?.mode === "api" ? "api" : "local";
   const apiHealthStatusText = getApiHealthStatusText();
   const apiHealthHistoryMarkup = getApiHealthHistoryMarkup();
+  const sessionStateText = state.adminAuthenticated
+    ? `Signed in${state.adminSessionExpiresAt ? ` (expires ${new Date(state.adminSessionExpiresAt).toLocaleTimeString()})` : ""}`
+    : "Not signed in";
+  const dataSourceLabel = state.adminUseLocalPilotData ? "LOCAL PILOT DATA (TROUBLESHOOTING)" : "SHARED DATABASE";
+  const loadingLabel = state.adminLoadingShared || state.adminAuthChecking || state.adminSigningIn
+    ? "Loading shared submissions..."
+    : "";
+  const showSessionReauth = state.adminLoadErrorCode === "SESSION_MISSING_OR_EXPIRED";
+  const showUnavailableMessage = state.adminLoadErrorCode === "ADMIN_SUBMISSIONS_UNAVAILABLE" || state.adminLoadErrorCode === "ADMIN_SESSION_UNAVAILABLE";
   const summaryMarkup = prizeSummary
     .map((item) => `<p>${escapeHtml(item.prizeName)} (${escapeHtml(item.prizeId)}): <strong>${item.totalTickets}</strong> tickets, <strong>${item.participantCount}</strong> participant${item.participantCount === 1 ? "" : "s"}</p>`)
     .join("");
@@ -885,10 +1094,27 @@ function renderAdminExportStep() {
         ${getPilotBannerMarkup()}
         <p class="app-subtitle">Admin-only export view for intake records after submissions close.</p>
         ${state.notice ? `<p class="status-message">${escapeHtml(state.notice)}</p>` : ""}
+        ${loadingLabel ? `<p class="confirmation-note">${escapeHtml(loadingLabel)}</p>` : ""}
+        ${state.adminLoadError ? `<p class="error-text">${escapeHtml(state.adminLoadError)}</p>` : ""}
+        ${state.adminUseLocalPilotData ? '<p class="error-text">Using Local Pilot Data only. This data is browser-specific and incomplete compared with shared submissions.</p>' : ""}
 
         <section class="saved-entries-panel" aria-label="Export summary">
           <h2 class="saved-entries-title">Export Summary</h2>
           <div class="saved-entries-list">
+            <article class="saved-entry-card">
+              <div class="saved-entry-header">
+                <h3>Organizer Session</h3>
+                <span>${escapeHtml(sessionStateText)}</span>
+              </div>
+              <p>Current admin data source: <strong>${escapeHtml(dataSourceLabel)}</strong></p>
+              <div class="confirmation-actions confirmation-actions--tight">
+                <button class="secondary-btn" id="admin-refresh-shared-btn" type="button" ${state.adminLoadingShared || state.adminAuthChecking || state.adminSigningIn ? "disabled" : ""}>Reload Shared Submissions</button>
+                ${showSessionReauth ? `<button class="secondary-btn" id="admin-sign-in-again-btn" type="button" ${state.adminSigningIn ? "disabled" : ""}>Sign In Again</button>` : ""}
+                ${showUnavailableMessage ? '<button class="secondary-btn" id="admin-use-local-btn" type="button">Use Local Pilot Data</button>' : ""}
+                ${state.adminUseLocalPilotData ? '<button class="secondary-btn" id="admin-return-shared-btn" type="button">Return to Shared Data</button>' : ""}
+                <button class="secondary-btn" id="admin-logout-btn" type="button" ${state.adminSigningOut ? "disabled" : ""}>${state.adminSigningOut ? "Signing out..." : "Logout"}</button>
+              </div>
+            </article>
             <article class="saved-entry-card">
               <div class="saved-entry-header">
                 <h3>Pilot Mode Status</h3>
@@ -958,6 +1184,51 @@ function renderAdminExportStep() {
       </section>
     </main>
   `;
+
+  const refreshSharedButton = document.getElementById("admin-refresh-shared-btn");
+  if (refreshSharedButton) {
+    refreshSharedButton.addEventListener("click", async () => {
+      const session = await checkAdminSessionStatus();
+      if (!session.ok && session.code === "SESSION_MISSING_OR_EXPIRED") {
+        renderAdminExportStep();
+        return;
+      }
+
+      await loadSharedAdminSubmissions();
+    });
+  }
+
+  const signInAgainButton = document.getElementById("admin-sign-in-again-btn");
+  if (signInAgainButton) {
+    signInAgainButton.addEventListener("click", async () => {
+      await openAdminExportFlow();
+    });
+  }
+
+  const useLocalButton = document.getElementById("admin-use-local-btn");
+  if (useLocalButton) {
+    useLocalButton.addEventListener("click", () => {
+      state.adminUseLocalPilotData = true;
+      setNotice("Using local pilot data for troubleshooting only.");
+      renderAdminExportStep();
+    });
+  }
+
+  const returnSharedButton = document.getElementById("admin-return-shared-btn");
+  if (returnSharedButton) {
+    returnSharedButton.addEventListener("click", async () => {
+      state.adminUseLocalPilotData = false;
+      setNotice("");
+      await loadSharedAdminSubmissions();
+    });
+  }
+
+  const logoutButton = document.getElementById("admin-logout-btn");
+  if (logoutButton) {
+    logoutButton.addEventListener("click", async () => {
+      await signOutOrganizer();
+    });
+  }
 
   document.getElementById("copy-admin-csv-btn").addEventListener("click", async () => {
     try {

@@ -56,7 +56,8 @@ Reset one browser for pilot testing:
 ## Open the admin dashboard
 
 1. Click Admin Export from participant screens.
-2. Enter code: raffle-admin
+2. If session is missing or expired, enter the organizer code when prompted.
+3. Organizer access is verified server-side and uses a signed httpOnly session cookie.
 
 Dashboard includes:
 
@@ -66,6 +67,13 @@ Dashboard includes:
 - Total tickets by prize
 - Participant count per prize
 - Submission detail list with participant ID, submission ID, participant name, and submitted timestamp
+
+Admin data source behavior:
+
+- Shared Neon submissions are the default and authoritative source.
+- If organizer session is missing/expired, admin retrieval returns 401 and requires sign-in again.
+- If shared retrieval is unavailable, admin screen shows an error and offers Use Local Pilot Data for troubleshooting only.
+- Local pilot data is browser-specific and may be incomplete.
 
 ## CSV exports
 
@@ -159,6 +167,30 @@ Expected JSON response:
 - timestamp
 
 The endpoint intentionally does not return connection details, usernames, hostnames, or environment values.
+
+## Organizer environment variables (Vercel)
+
+Add these in Vercel Project Settings -> Environment Variables:
+
+- ORGANIZER_ACCESS_CODE: Organizer-only sign-in code checked by POST /api/admin/session
+- ORGANIZER_SESSION_SECRET: Long random secret used to sign organizer session cookie
+- ORGANIZER_SESSION_TTL_SECONDS: Optional session lifetime in seconds (default is 7200)
+- RAFFLE_EVENT_ID: Event filter for shared admin retrieval (defaults to raffle-royale-2026)
+
+Database variables remain required:
+
+- DATABASE_URL (preferred) or POSTGRES_URL (fallback)
+
+## Organizer retrieval testing notes
+
+1. Deploy with organizer environment variables configured.
+2. Open app and click Admin Export.
+3. Enter organizer code and confirm shared submissions load.
+4. Confirm CSV exports still generate expected Standard CSV and Ticket Pool CSV formats.
+5. Delete organizer session by clicking Logout and confirm sign-in is required again.
+6. Temporarily break organizer API or DB config and confirm admin screen shows shared retrieval error.
+7. Confirm Use Local Pilot Data appears only as troubleshooting mode and warning text indicates local data may be incomplete.
+8. Confirm Return to Shared Data reloads shared submissions.
 
 ## Pilot Test Checklist (Nontechnical)
 
