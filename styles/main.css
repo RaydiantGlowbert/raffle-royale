@@ -1,0 +1,466 @@
+/*
+  Raffle Royale visual system:
+  - Bold game-show typography and rich gold/red palette
+  - Responsive card grid for desktop and mobile
+*/
+:root {
+  --bg-top: #1c0f0a;
+  --bg-bottom: #3f180e;
+  --panel: rgba(23, 14, 10, 0.86);
+  --panel-border: rgba(245, 190, 78, 0.36);
+  --text-primary: #fff9ea;
+  --text-secondary: #ffddb4;
+  --accent-gold: #f7be4b;
+  --accent-gold-deep: #e1972f;
+  --accent-red: #b53b1e;
+  --danger: #f76d6d;
+  --success: #82de8e;
+  --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.35);
+  --radius-xl: 20px;
+  --radius-lg: 14px;
+  --radius-md: 10px;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+}
+
+body {
+  font-family: "Segoe UI", "Trebuchet MS", Arial, sans-serif;
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255, 199, 88, 0.18), transparent 35%),
+    radial-gradient(circle at 80% 10%, rgba(255, 90, 49, 0.2), transparent 30%),
+    linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+  line-height: 1.4;
+}
+
+.app-shell {
+  width: min(1080px, 100% - 2rem);
+  margin: 2rem auto;
+  padding: var(--space-8);
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(6px);
+}
+
+.app-title {
+  font-family: Impact, "Arial Narrow Bold", sans-serif;
+  letter-spacing: 1px;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  color: var(--accent-gold);
+  text-transform: uppercase;
+  text-align: center;
+  text-shadow: 0 4px 18px rgba(247, 190, 75, 0.34);
+}
+
+.app-subtitle {
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-6);
+  font-weight: 500;
+}
+
+.pilot-banner {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.pilot-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #3e2105;
+  background: linear-gradient(180deg, var(--accent-gold), var(--accent-gold-deep));
+}
+
+.pilot-message {
+  color: var(--text-secondary);
+  text-align: center;
+  font-weight: 600;
+}
+
+.status-message {
+  margin-bottom: var(--space-4);
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius-md);
+  background: rgba(130, 222, 142, 0.12);
+  border: 1px solid rgba(130, 222, 142, 0.35);
+  color: var(--text-primary);
+}
+
+.name-form,
+.confirmation {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 520px;
+  margin-inline: auto;
+}
+
+.label {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.text-input {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 235, 190, 0.35);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.text-input:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+.primary-btn,
+.secondary-btn,
+.ticket-btn {
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: transform 120ms ease, opacity 120ms ease, background-color 120ms ease;
+}
+
+.primary-btn {
+  padding: 0.9rem 1.2rem;
+  font-weight: 700;
+  background: linear-gradient(180deg, var(--accent-gold), var(--accent-gold-deep));
+  color: #3e2105;
+}
+
+.primary-btn:hover:enabled,
+.secondary-btn:hover,
+.ticket-btn:hover:enabled {
+  transform: translateY(-1px);
+}
+
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondary-btn {
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--text-primary);
+}
+
+.raffle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.participant-chip {
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.remaining-counter {
+  padding: 0.6rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 700;
+  color: #371c05;
+  background: var(--accent-gold);
+}
+
+.remaining-counter.complete {
+  background: var(--success);
+  color: #103718;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.prize-card {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: var(--shadow-md);
+}
+
+.prize-media {
+  aspect-ratio: 4 / 3;
+  border-radius: calc(var(--radius-lg) - 4px);
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(247, 190, 75, 0.16), rgba(255, 255, 255, 0.08));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.prize-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.prize-name {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.prize-description {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  min-height: 2.5em;
+}
+
+.ticket-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.ticket-btn {
+  width: 2.2rem;
+  height: 2.2rem;
+  font-size: 1.2rem;
+  line-height: 1;
+  font-weight: 700;
+  color: #3a2206;
+  background: var(--accent-gold);
+}
+
+.ticket-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ticket-count {
+  min-width: 2ch;
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.submit-wrap {
+  margin-top: var(--space-6);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.error-text {
+  margin-top: var(--space-2);
+  color: var(--danger);
+  font-weight: 600;
+  min-height: 1.2em;
+}
+
+.confirmation {
+  text-align: center;
+}
+
+.confirmation-title {
+  font-family: Impact, "Arial Narrow Bold", sans-serif;
+  color: var(--accent-gold);
+  font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+.confirmation-details {
+  text-align: left;
+  display: grid;
+  gap: var(--space-2);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.confirmation-note {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.export-panel {
+  display: grid;
+  gap: var(--space-3);
+  text-align: left;
+}
+
+.export-textarea {
+  width: 100%;
+  min-height: 92px;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  resize: vertical;
+}
+
+.draw-entry-list {
+  list-style: none;
+  display: grid;
+  gap: var(--space-2);
+  color: var(--text-primary);
+}
+
+.saved-entry-card--winner {
+  border-color: rgba(247, 190, 75, 0.45);
+  box-shadow: 0 0 0 1px rgba(247, 190, 75, 0.1) inset;
+}
+
+.saved-entries-panel {
+  display: grid;
+  gap: var(--space-3);
+  text-align: left;
+}
+
+.saved-entries-title {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.saved-entries-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.summary-card {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.summary-card p {
+  color: var(--text-secondary);
+}
+
+.summary-bar {
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.summary-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent-gold), var(--accent-gold-deep));
+}
+
+.saved-entry-card {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.saved-entry-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: baseline;
+  margin-bottom: var(--space-2);
+}
+
+.saved-entry-header h3 {
+  font-size: 1rem;
+}
+
+.saved-entry-header span {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}
+
+.confirmation-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.confirmation-actions--tight {
+  justify-content: flex-start;
+}
+
+.confirmation-actions .secondary-btn {
+  min-width: 180px;
+}
+
+@media (max-width: 980px) {
+  .card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .app-shell {
+    width: min(1080px, 100% - 1rem);
+    margin: 1rem auto;
+    padding: var(--space-5);
+  }
+
+  .card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .raffle-header {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 420px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .saved-entry-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .confirmation-actions {
+    flex-direction: column;
+  }
+
+  .confirmation-actions .secondary-btn,
+  .confirmation-actions .primary-btn {
+    width: 100%;
+  }
+
+  .submit-wrap {
+    justify-content: stretch;
+  }
+
+  .submit-wrap .primary-btn {
+    width: 100%;
+  }
+}

@@ -1,0 +1,19 @@
+<svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="80" y1="40" x2="720" y2="560" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7BE4B" stop-opacity="0.25" />
+      <stop offset="1" stop-color="#B53B1E" stop-opacity="0.55" />
+    </linearGradient>
+    <linearGradient id="shine" x1="130" y1="90" x2="670" y2="500" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF9EA" stop-opacity="0.85" />
+      <stop offset="1" stop-color="#FFDD94" stop-opacity="0.15" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" rx="44" fill="#1C0F0A" />
+  <rect x="24" y="24" width="752" height="552" rx="36" fill="url(#bg)" stroke="#F7BE4B" stroke-opacity="0.45" stroke-width="4" />
+  <circle cx="400" cy="245" r="120" fill="url(#shine)" />
+  <path d="M400 150L447 232L540 249L473 312L489 404L400 360L311 404L327 312L260 249L353 232L400 150Z" fill="#F7BE4B" fill-opacity="0.9" />
+  <rect x="200" y="438" width="400" height="44" rx="22" fill="#FFF9EA" fill-opacity="0.85" />
+  <rect x="238" y="450" width="324" height="20" rx="10" fill="#1C0F0A" fill-opacity="0.85" />
+  <text x="400" y="520" text-anchor="middle" fill="#FFF9EA" fill-opacity="0.95" font-family="Arial, sans-serif" font-size="28" font-weight="700">Prize Image Placeholder</text>
+</svg>

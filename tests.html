@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Raffle Royale Tests</title>
+  <link rel="stylesheet" href="styles/reset.css" />
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <h1 class="app-title">Raffle Royale Test Runner</h1>
+    <p class="app-subtitle">Browser-based checks for Version 1 intake and export logic.</p>
+    <div id="app" hidden></div>
+    <section class="confirmation-details" aria-label="Test output">
+      <pre id="test-output"></pre>
+    </section>
+    <div class="confirmation-actions">
+      <button class="primary-btn" id="run-tests-btn" type="button">Run Tests</button>
+      <a class="secondary-btn" href="index.html">Back To App</a>
+    </div>
+  </main>
+
+  <script src="scripts/data.js"></script>
+  <script src="scripts/storage.js"></script>
+  <script src="scripts/submissionService.js"></script>
+  <script src="scripts/app.js"></script>
+  <script src="scripts/tests.js"></script>
+</body>
+</html>
