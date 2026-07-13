@@ -1,8 +1,8 @@
 import { getSqlClient } from "./_db.js";
+import { getAllowedPrizeIds, normalizeAndValidateAllocations } from "./_prizeValidation.js";
 
 const NAME_FORMAT = /^[A-Za-z]+(?:[\-'][A-Za-z]+)?\s+[A-Za-z]\.?$/;
 const ALLOWED_MODES = new Set(["pilot", "live"]);
-const EXPECTED_PRIZE_IDS = ["p1", "p2", "p3", "p4", "p5"];
 const EXPECTED_TOTAL_TICKETS = 20;
 
 function jsonResponse(status, payload) {
@@ -15,7 +15,7 @@ function jsonResponse(status, payload) {
   });
 }
 
-function parseRequestBody(body) {
+function parseRequestBody(body, allowedPrizeIds) {
   if (!body || typeof body !== "object") {
     return { ok: false, message: "Missing submission payload." };
   }
@@ -27,7 +27,6 @@ function parseRequestBody(body) {
   const lastInitial = String(body.lastInitial || "").replace(/\./g, "").trim().charAt(0).toUpperCase();
   const mode = String(body.mode || "").trim();
   const eventId = String(body.eventId || "raffle-royale-2026").trim();
-  const sourceAppVersion = String(body.sourceAppVersion || "v1").trim();
   const allocations = body.allocations || {};
   const submittedAtClient = body.submittedAt ? String(body.submittedAt) : null;
 
@@ -43,25 +42,17 @@ function parseRequestBody(body) {
     return { ok: false, message: "Mode is invalid." };
   }
 
-  const rawAllocationKeys = Object.keys(allocations);
-  if (rawAllocationKeys.some((key) => !EXPECTED_PRIZE_IDS.includes(key))) {
-    return { ok: false, message: "Submission contains unknown prize IDs." };
+  const allocationValidation = normalizeAndValidateAllocations(allocations, {
+    allowedPrizeIds,
+    expectedTotalTickets: EXPECTED_TOTAL_TICKETS
+  });
+
+  if (!allocationValidation.ok) {
+    return { ok: false, message: allocationValidation.message };
   }
 
-  const normalizedAllocations = Object.fromEntries(
-    EXPECTED_PRIZE_IDS.map((id) => [id, Number(allocations[id] || 0)])
-  );
-
-  for (const [prizeId, value] of Object.entries(normalizedAllocations)) {
-    if (!Number.isFinite(value) || value < 0 || !Number.isInteger(value)) {
-      return { ok: false, message: `Allocation for ${prizeId} must be a non-negative whole number.` };
-    }
-  }
-
-  const totalFromAllocations = Object.values(normalizedAllocations).reduce((sum, value) => sum + value, 0);
   const totalTickets = Number(body.totalTickets);
-
-  if (totalFromAllocations !== EXPECTED_TOTAL_TICKETS || totalTickets !== EXPECTED_TOTAL_TICKETS) {
+  if (totalTickets !== EXPECTED_TOTAL_TICKETS) {
     return { ok: false, message: `Total ticket allocation must equal ${EXPECTED_TOTAL_TICKETS}.` };
   }
 
@@ -75,9 +66,9 @@ function parseRequestBody(body) {
       lastInitial,
       mode,
       eventId,
-      sourceAppVersion,
       totalTickets,
-      allocations: normalizedAllocations,
+      allocations: allocationValidation.normalized,
+      nonZeroAllocations: allocationValidation.nonZeroEntries,
       submittedAtClient
     }
   };
@@ -104,7 +95,8 @@ export async function POST(request) {
     });
   }
 
-  const parsed = parseRequestBody(body);
+  const allowedPrizeIds = getAllowedPrizeIds();
+  const parsed = parseRequestBody(body, allowedPrizeIds);
   if (!parsed.ok) {
     return jsonResponse(422, {
       ok: false,
@@ -116,43 +108,56 @@ export async function POST(request) {
   const input = parsed.payload;
 
   try {
-    const inserted = await sql`
-      insert into submissions (
-        submission_id,
-        event_id,
-        participant_id,
-        participant_name,
-        first_name,
-        last_initial,
-        mode,
-        total_tickets,
-        p1_tickets,
-        p2_tickets,
-        p3_tickets,
-        p4_tickets,
-        p5_tickets,
-        submitted_at_client
-      )
-      values (
-        ${input.submissionId},
-        ${input.eventId},
-        ${input.participantId},
-        ${input.participantName},
-        ${input.firstName},
-        ${input.lastInitial},
-        ${input.mode},
-        ${input.totalTickets},
-        ${input.allocations.p1},
-        ${input.allocations.p2},
-        ${input.allocations.p3},
-        ${input.allocations.p4},
-        ${input.allocations.p5},
-        ${input.submittedAtClient}
-      )
-      returning submission_id, event_id, participant_id, submitted_at
-    `;
+    const [inserted] = await sql.transaction((txn) => {
+      const queries = [
+        txn`
+          insert into submissions (
+            submission_id,
+            event_id,
+            participant_id,
+            participant_name,
+            first_name,
+            last_initial,
+            mode,
+            total_tickets,
+            submitted_at_client
+          )
+          values (
+            ${input.submissionId},
+            ${input.eventId},
+            ${input.participantId},
+            ${input.participantName},
+            ${input.firstName},
+            ${input.lastInitial},
+            ${input.mode},
+            ${input.totalTickets},
+            ${input.submittedAtClient}
+          )
+          returning submission_id, event_id, participant_id, submitted_at
+        `
+      ];
 
-    const row = inserted[0] || {};
+      input.nonZeroAllocations.forEach((item) => {
+        queries.push(
+          txn`
+            insert into submission_allocations (
+              submission_id,
+              prize_id,
+              tickets_allocated
+            )
+            values (
+              ${input.submissionId},
+              ${item.prizeId},
+              ${item.ticketsAllocated}
+            )
+          `
+        );
+      });
+
+      return queries;
+    });
+
+    const row = inserted?.[0] || {};
 
     return jsonResponse(201, {
       ok: true,

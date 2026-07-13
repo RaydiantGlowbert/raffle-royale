@@ -176,10 +176,46 @@ Add these in Vercel Project Settings -> Environment Variables:
 - ORGANIZER_SESSION_SECRET: Long random secret used to sign organizer session cookie
 - ORGANIZER_SESSION_TTL_SECONDS: Optional session lifetime in seconds (default is 7200)
 - RAFFLE_EVENT_ID: Event filter for shared admin retrieval (defaults to raffle-royale-2026)
+- RAFFLE_PRIZE_IDS: Comma-separated allowed prize IDs for server validation (defaults to p1,p2,p3,p4,p5)
 
 Database variables remain required:
 
 - DATABASE_URL (preferred) or POSTGRES_URL (fallback)
+
+## Additive normalized allocation migration (pilot-safe)
+
+This migration adds normalized allocation storage without dropping legacy p1..p5 columns.
+
+Files:
+
+- sql/002_normalize_submission_allocations.sql
+
+What migration 002 does:
+
+- Creates submission_allocations
+- Backfills non-zero legacy p1..p5 allocations into one row per submission/prize
+- Uses ON CONFLICT so the backfill can be rerun safely
+- Keeps legacy columns unchanged for staged cutover safety
+
+Run order:
+
+1. Ensure 001 schema already exists.
+2. Run 002 migration in Neon SQL Editor.
+3. Verify backfill with the verification queries included in 002.
+4. Deploy API changes that write/read normalized allocations.
+
+Verification checklist after 002:
+
+1. Expected non-zero legacy allocation count equals submission_allocations row count.
+2. Per-submission legacy total equals normalized total.
+3. Sample rows exist in submission_allocations for recent submissions.
+
+Rollback guidance for additive stage:
+
+1. If new API behavior fails, redeploy the previous API build.
+2. Keep legacy columns in place during rollback.
+3. submission_allocations can remain populated; no data deletion is required for rollback.
+4. Rerun 002 safely after fixes if needed.
 
 ## Organizer retrieval testing notes
 

@@ -118,6 +118,22 @@
       assert(threw, "Expected validation to reject non-total allocation");
     });
 
+    test("Validation accepts sparse allocation object for known prize IDs", function () {
+      const valid = createValidEntry({
+        allocations: { p1: 20 },
+        totalTickets: 20
+      });
+
+      let threw = false;
+      try {
+        serviceHooks.validateSubmissionEntry(valid, []);
+      } catch {
+        threw = true;
+      }
+
+      assert(threw === false, "Sparse allocations with known IDs should pass validation");
+    });
+
     test("Validation rejects unknown prize IDs", function () {
       const invalid = createValidEntry({
         allocations: { p1: 20 },
@@ -133,6 +149,59 @@
       }
 
       assert(threw, "Expected validation to reject invalid prize IDs");
+    });
+
+    test("Validation rejects negative and fractional allocation values", function () {
+      const negative = createValidEntry({
+        allocations: { p1: -1, p2: 21, p3: 0, p4: 0, p5: 0 },
+        totalTickets: 20
+      });
+
+      let negativeRejected = false;
+      try {
+        serviceHooks.validateSubmissionEntry(negative, []);
+      } catch {
+        negativeRejected = true;
+      }
+
+      assert(negativeRejected, "Negative allocation should be rejected");
+
+      const fractional = createValidEntry({
+        allocations: { p1: 10.5, p2: 9.5, p3: 0, p4: 0, p5: 0 },
+        totalTickets: 20
+      });
+
+      let fractionalRejected = false;
+      try {
+        serviceHooks.validateSubmissionEntry(fractional, []);
+      } catch {
+        fractionalRejected = true;
+      }
+
+      assert(fractionalRejected, "Fractional allocation should be rejected");
+    });
+
+    test("Validation rejects duplicate submission IDs", function () {
+      const duplicate = createValidEntry({
+        submissionId: "dup-submission-id-1",
+        allocations: { p1: 20, p2: 0, p3: 0, p4: 0, p5: 0 },
+        totalTickets: 20
+      });
+
+      const existing = [
+        {
+          submissionId: "dup-submission-id-1"
+        }
+      ];
+
+      let threw = false;
+      try {
+        serviceHooks.validateSubmissionEntry(duplicate, existing);
+      } catch {
+        threw = true;
+      }
+
+      assert(threw, "Duplicate submissionId should be rejected");
     });
 
     test("Standard CSV export uses one row per entered prize", function () {
@@ -159,6 +228,26 @@
       assert(csv.includes("participantId"), "CSV header missing participantId");
       assert(csv.includes("submissionId"), "CSV header missing submissionId");
       assert(csv.includes("prizeId"), "CSV header missing prizeId");
+    });
+
+    test("Reconstructed sparse allocations still export correctly", function () {
+      const submissions = [
+        {
+          mode: "pilot",
+          participantId: "participant-1",
+          submissionId: "sparse-1",
+          submittedAt: "2026-07-11T12:00:00.000Z",
+          participantName: "Jamie T",
+          allocations: { p1: 20 }
+        }
+      ];
+
+      const standardRows = appHooks.buildAdminExportRows(submissions);
+      assert(standardRows.length === 1, "Sparse allocations should export one standard row");
+      assert(standardRows[0].prizeId === "p1", "Sparse export row should use p1");
+
+      const ticketPoolRows = appHooks.buildTicketPoolRows(submissions);
+      assert(ticketPoolRows.length === 20, "Sparse allocations should expand to 20 ticket pool rows");
     });
 
     test("Ticket pool CSV expands and restarts numbering per prize", function () {
@@ -257,6 +346,8 @@
       assert(callsB.length === 2, "Should require two confirmations");
     });
 
+    lines.push("");
+    lines.push("Note: Database transaction rollback behavior is verified with server/API checks after migration.");
     lines.push("");
     lines.push(`Result: ${passed} passed, ${failed} failed`);
 

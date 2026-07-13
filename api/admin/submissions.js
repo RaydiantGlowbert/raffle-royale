@@ -1,5 +1,6 @@
 import { getSqlClient } from "../_db.js";
 import { readSessionFromRequest } from "../_adminAuth.js";
+import { getAllowedPrizeIds, rebuildAllocationsObject } from "../_prizeValidation.js";
 
 const DEFAULT_EVENT_ID = "raffle-royale-2026";
 
@@ -18,7 +19,9 @@ function getRaffleEventId() {
   return configured || DEFAULT_EVENT_ID;
 }
 
-function normalizeRow(row) {
+function normalizeRow(row, allowedPrizeIds) {
+  const allocationRows = Array.isArray(row.allocations_json) ? row.allocations_json : [];
+
   return {
     submissionId: row.submission_id,
     id: row.submission_id,
@@ -29,13 +32,7 @@ function normalizeRow(row) {
     lastInitial: row.last_initial,
     mode: row.mode,
     totalTickets: Number(row.total_tickets),
-    allocations: {
-      p1: Number(row.p1_tickets || 0),
-      p2: Number(row.p2_tickets || 0),
-      p3: Number(row.p3_tickets || 0),
-      p4: Number(row.p4_tickets || 0),
-      p5: Number(row.p5_tickets || 0)
-    },
+    allocations: rebuildAllocationsObject(allocationRows, allowedPrizeIds),
     submittedAt: new Date(row.submitted_at).toISOString()
   };
 }
@@ -61,30 +58,47 @@ export async function GET(request) {
   }
 
   const eventId = getRaffleEventId();
+  const allowedPrizeIds = getAllowedPrizeIds();
 
   try {
     const rows = await sql`
       select
-        submission_id,
-        event_id,
-        participant_id,
-        participant_name,
-        first_name,
-        last_initial,
-        mode,
-        total_tickets,
-        p1_tickets,
-        p2_tickets,
-        p3_tickets,
-        p4_tickets,
-        p5_tickets,
-        submitted_at
-      from submissions
-      where event_id = ${eventId}
-      order by submitted_at desc
+        s.submission_id,
+        s.event_id,
+        s.participant_id,
+        s.participant_name,
+        s.first_name,
+        s.last_initial,
+        s.mode,
+        s.total_tickets,
+        coalesce(
+          json_agg(
+            json_build_object(
+              'prize_id', sa.prize_id,
+              'tickets_allocated', sa.tickets_allocated
+            )
+          ) filter (where sa.id is not null),
+          '[]'::json
+        ) as allocations_json,
+        s.submitted_at
+      from submissions s
+      left join submission_allocations sa
+        on sa.submission_id = s.submission_id
+      where s.event_id = ${eventId}
+      group by
+        s.submission_id,
+        s.event_id,
+        s.participant_id,
+        s.participant_name,
+        s.first_name,
+        s.last_initial,
+        s.mode,
+        s.total_tickets,
+        s.submitted_at
+      order by s.submitted_at desc
     `;
 
-    const entries = rows.map(normalizeRow);
+    const entries = rows.map((row) => normalizeRow(row, allowedPrizeIds));
 
     return jsonResponse(200, {
       ok: true,
