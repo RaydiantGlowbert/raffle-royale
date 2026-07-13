@@ -106,6 +106,11 @@ export async function POST(request) {
   }
 
   const input = parsed.payload;
+  const legacyP1Tickets = Number(input.allocations.p1 || 0);
+  const legacyP2Tickets = Number(input.allocations.p2 || 0);
+  const legacyP3Tickets = Number(input.allocations.p3 || 0);
+  const legacyP4Tickets = Number(input.allocations.p4 || 0);
+  const legacyP5Tickets = Number(input.allocations.p5 || 0);
 
   try {
     const [inserted] = await sql.transaction((txn) => {
@@ -120,6 +125,11 @@ export async function POST(request) {
             last_initial,
             mode,
             total_tickets,
+            p1_tickets,
+            p2_tickets,
+            p3_tickets,
+            p4_tickets,
+            p5_tickets,
             submitted_at_client
           )
           values (
@@ -131,6 +141,11 @@ export async function POST(request) {
             ${input.lastInitial},
             ${input.mode},
             ${input.totalTickets},
+            ${legacyP1Tickets},
+            ${legacyP2Tickets},
+            ${legacyP3Tickets},
+            ${legacyP4Tickets},
+            ${legacyP5Tickets},
             ${input.submittedAtClient}
           )
           returning submission_id, event_id, participant_id, submitted_at
@@ -180,7 +195,7 @@ export async function POST(request) {
     if (error && error.code === "23514") {
       return jsonResponse(422, {
         ok: false,
-        code: "VALIDATION_ERROR",
+        code: "DB_CONSTRAINT_ERROR",
         message: "Submission failed database validation checks."
       });
     }
