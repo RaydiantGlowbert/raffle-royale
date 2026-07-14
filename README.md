@@ -30,7 +30,7 @@ Derived app mode value:
 
 1. Open index.html in a browser.
 2. Enter participant name as First Name + Last Initial (example: Jamie T).
-3. Allocate all 20 tickets across the five prize cards.
+3. Allocate all 20 tickets across the active prize cards.
 4. Review and submit.
 
 ## Participant IDs and duplicate prevention
@@ -175,8 +175,9 @@ Add these in Vercel Project Settings -> Environment Variables:
 - ORGANIZER_ACCESS_CODE: Organizer-only sign-in code checked by POST /api/admin/session
 - ORGANIZER_SESSION_SECRET: Long random secret used to sign organizer session cookie
 - ORGANIZER_SESSION_TTL_SECONDS: Optional session lifetime in seconds (default is 7200)
-- RAFFLE_EVENT_ID: Event filter for shared admin retrieval (defaults to raffle-royale-2026)
-- RAFFLE_PRIZE_IDS: Comma-separated allowed prize IDs for server validation (defaults to p1,p2,p3,p4,p5)
+- RAFFLE_EVENT_ID: Event filter for shared admin retrieval (defaults to raffle-royale-2026-final-pilot)
+- RAFFLE_PRIZE_IDS: Optional comma-separated allow-list override for server validation. If omitted, server defaults to active final-pilot prizes:
+  royal-flush-retreat,vegas-main-character,high-roller-time-bank,mentor-mvp-pack,double-down-development,brew-crew-casey,good-fortune-giveaway,wise-mentor-collection,casino-royale-collection,purr-fect-companion-pack,top-dog-pack
 
 Database variables remain required:
 
@@ -189,6 +190,7 @@ This migration adds normalized allocation storage without dropping legacy p1..p5
 Files:
 
 - sql/002_normalize_submission_allocations.sql
+- sql/003_relax_legacy_p1_p5_constraints.sql
 
 What migration 002 does:
 
@@ -202,7 +204,10 @@ Run order:
 1. Ensure 001 schema already exists.
 2. Run 002 migration in Neon SQL Editor.
 3. Verify backfill with the verification queries included in 002.
-4. Deploy API changes that write/read normalized allocations.
+4. Run 003 migration in Neon SQL Editor to drop only legacy constraints that block final-pilot prize IDs:
+  - submissions_allocations_sum_check
+  - submissions_total_matches_allocations_check
+5. Deploy API changes that write/read normalized allocations.
 
 Verification checklist after 002:
 
@@ -216,6 +221,15 @@ Rollback guidance for additive stage:
 2. Keep legacy columns in place during rollback.
 3. submission_allocations can remain populated; no data deletion is required for rollback.
 4. Rerun 002 safely after fixes if needed.
+
+## Final-prize pilot activation checklist
+
+1. In Neon SQL Editor, run sql/003_relax_legacy_p1_p5_constraints.sql.
+2. In Vercel Project Settings -> Environment Variables, set RAFFLE_EVENT_ID=raffle-royale-2026-final-pilot for each target environment.
+3. Set RAFFLE_PRIZE_IDS to the active final-pilot IDs (comma-separated):
+  royal-flush-retreat,vegas-main-character,high-roller-time-bank,mentor-mvp-pack,double-down-development,brew-crew-casey,good-fortune-giveaway,wise-mentor-collection,casino-royale-collection,purr-fect-companion-pack,top-dog-pack
+4. Confirm presidents-pick is intentionally excluded from RAFFLE_PRIZE_IDS during pilot.
+5. Redeploy and verify participant submission + admin retrieval + both CSV exports.
 
 ## Organizer retrieval testing notes
 

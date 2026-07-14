@@ -109,7 +109,7 @@ function normalizeSubmissionEntry(entry) {
 
 function validateSubmissionEntry(entry, existingSubmissions) {
   const issues = [];
-  const prizeIds = new Set(PRIZES.map((prize) => prize.id));
+  const activePrizeIds = new Set(PRIZES.map((prize) => prize.id));
   const nameIsValid = /^[A-Za-z]+(?:[\-'][A-Za-z]+)?\s+[A-Za-z]\.?$/.test(String(entry.participantName || "").trim());
 
   if (!nameIsValid) {
@@ -126,7 +126,7 @@ function validateSubmissionEntry(entry, existingSubmissions) {
 
   const allocationKeys = Object.keys(entry.allocations || {});
   const rawAllocationKeys = Array.isArray(entry.rawAllocationKeys) ? entry.rawAllocationKeys : allocationKeys;
-  if (rawAllocationKeys.some((id) => !prizeIds.has(id))) {
+  if (rawAllocationKeys.some((id) => !activePrizeIds.has(id))) {
     issues.push("Submission contains unknown prize IDs.");
   }
 

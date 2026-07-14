@@ -1,4 +1,16 @@
-const DEFAULT_PRIZE_IDS = ["p1", "p2", "p3", "p4", "p5"];
+const DEFAULT_PRIZE_IDS = [
+  "royal-flush-retreat",
+  "vegas-main-character",
+  "high-roller-time-bank",
+  "mentor-mvp-pack",
+  "double-down-development",
+  "brew-crew-casey",
+  "good-fortune-giveaway",
+  "wise-mentor-collection",
+  "casino-royale-collection",
+  "purr-fect-companion-pack",
+  "top-dog-pack"
+];
 const DEFAULT_TOTAL_TICKETS = 20;
 
 export function getAllowedPrizeIds() {

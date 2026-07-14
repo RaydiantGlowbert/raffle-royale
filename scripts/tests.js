@@ -1,4 +1,22 @@
 (function () {
+  const ACTIVE_IDS = {
+    p1: "royal-flush-retreat",
+    p2: "vegas-main-character",
+    p3: "high-roller-time-bank",
+    p4: "mentor-mvp-pack",
+    p5: "double-down-development"
+  };
+
+  function allocationFromLegacyShape(legacy) {
+    return {
+      [ACTIVE_IDS.p1]: Number(legacy.p1 || 0),
+      [ACTIVE_IDS.p2]: Number(legacy.p2 || 0),
+      [ACTIVE_IDS.p3]: Number(legacy.p3 || 0),
+      [ACTIVE_IDS.p4]: Number(legacy.p4 || 0),
+      [ACTIVE_IDS.p5]: Number(legacy.p5 || 0)
+    };
+  }
+
   function assert(condition, message) {
     if (!condition) {
       throw new Error(message);
@@ -44,7 +62,7 @@
         lastInitial: safeOverrides.lastInitial || "T",
         mode: safeOverrides.mode || "pilot",
         totalTickets: safeOverrides.totalTickets || 20,
-        allocations: safeOverrides.allocations || { p1: 10, p2: 5, p3: 5, p4: 0, p5: 0 }
+        allocations: safeOverrides.allocations || allocationFromLegacyShape({ p1: 10, p2: 5, p3: 5, p4: 0, p5: 0 })
       };
     }
 
@@ -61,8 +79,8 @@
     });
 
     test("Submission ID generation is unique", function () {
-      const one = serviceHooks.normalizeSubmissionEntry({ participantName: "Alex R", allocations: { p1: 20 } });
-      const two = serviceHooks.normalizeSubmissionEntry({ participantName: "Alex R", allocations: { p1: 20 } });
+      const one = serviceHooks.normalizeSubmissionEntry({ participantName: "Alex R", allocations: allocationFromLegacyShape({ p1: 20 }) });
+      const two = serviceHooks.normalizeSubmissionEntry({ participantName: "Alex R", allocations: allocationFromLegacyShape({ p1: 20 }) });
       assert(one.submissionId !== two.submissionId, "submission IDs should be unique");
     });
 
@@ -73,23 +91,23 @@
     });
 
     test("Ticket allocation cannot exceed total and cannot go below zero", function () {
-      let allocations = { p1: 20, p2: 0, p3: 0, p4: 0, p5: 0 };
-      allocations = appHooks.applyTicketAction(allocations, "increment", "p2");
-      assert(allocations.p2 === 0, "Increment should be blocked when total is exhausted");
+      let allocations = allocationFromLegacyShape({ p1: 20, p2: 0, p3: 0, p4: 0, p5: 0 });
+      allocations = appHooks.applyTicketAction(allocations, "increment", ACTIVE_IDS.p2);
+      assert(allocations[ACTIVE_IDS.p2] === 0, "Increment should be blocked when total is exhausted");
 
-      allocations = { p1: 0, p2: 0, p3: 0, p4: 0, p5: 0 };
-      allocations = appHooks.applyTicketAction(allocations, "decrement", "p1");
-      assert(allocations.p1 === 0, "Decrement should never drop below zero");
+      allocations = allocationFromLegacyShape({ p1: 0, p2: 0, p3: 0, p4: 0, p5: 0 });
+      allocations = appHooks.applyTicketAction(allocations, "decrement", ACTIVE_IDS.p1);
+      assert(allocations[ACTIVE_IDS.p1] === 0, "Decrement should never drop below zero");
 
-      allocations = appHooks.applyTicketAction(allocations, "increment", "p1");
-      assert(allocations.p1 === 1, "Increment should work when tickets remain");
+      allocations = appHooks.applyTicketAction(allocations, "increment", ACTIVE_IDS.p1);
+      assert(allocations[ACTIVE_IDS.p1] === 1, "Increment should work when tickets remain");
     });
 
     test("Submission normalization captures required pilot fields", function () {
       const normalized = serviceHooks.normalizeSubmissionEntry({
         participantId: "participant-1",
         participantName: "Jamie T",
-        allocations: { p1: 3, p2: 2 }
+        allocations: allocationFromLegacyShape({ p1: 3, p2: 2 })
       });
 
       assert(Boolean(normalized.participantId), "participantId missing");
@@ -98,14 +116,14 @@
       assert(Boolean(normalized.submittedAt), "submittedAt missing");
       assert(normalized.firstName === "Jamie", "firstName not captured");
       assert(normalized.lastInitial === "T", "lastInitial not captured");
-      assert(normalized.allocations.p1 === 3, "allocation p1 mismatch");
-      assert(normalized.allocations.p3 === 0, "missing prize buckets should normalize to zero");
+      assert(normalized.allocations[ACTIVE_IDS.p1] === 3, "allocation p1 mismatch");
+      assert(normalized.allocations[ACTIVE_IDS.p3] === 0, "missing prize buckets should normalize to zero");
     });
 
     test("Validation rejects incorrect total ticket count", function () {
       const invalid = createValidEntry({
         totalTickets: 19,
-        allocations: { p1: 19, p2: 0, p3: 0, p4: 0, p5: 0 }
+        allocations: allocationFromLegacyShape({ p1: 19, p2: 0, p3: 0, p4: 0, p5: 0 })
       });
 
       let threw = false;
@@ -120,7 +138,7 @@
 
     test("Validation accepts sparse allocation object for known prize IDs", function () {
       const valid = createValidEntry({
-        allocations: { p1: 20 },
+        allocations: { [ACTIVE_IDS.p1]: 20 },
         totalTickets: 20
       });
 
@@ -136,10 +154,10 @@
 
     test("Validation rejects unknown prize IDs", function () {
       const invalid = createValidEntry({
-        allocations: { p1: 20 },
+        allocations: { [ACTIVE_IDS.p1]: 20 },
         totalTickets: 20
       });
-      invalid.rawAllocationKeys = ["p1", "badPrizeId"];
+      invalid.rawAllocationKeys = [ACTIVE_IDS.p1, "badPrizeId"];
 
       let threw = false;
       try {
@@ -151,9 +169,26 @@
       assert(threw, "Expected validation to reject invalid prize IDs");
     });
 
+    test("Validation rejects inactive presidents-pick prize ID", function () {
+      const invalid = createValidEntry({
+        allocations: { [ACTIVE_IDS.p1]: 20 },
+        totalTickets: 20
+      });
+      invalid.rawAllocationKeys = [ACTIVE_IDS.p1, "presidents-pick"];
+
+      let threw = false;
+      try {
+        serviceHooks.validateSubmissionEntry(invalid, []);
+      } catch {
+        threw = true;
+      }
+
+      assert(threw, "Expected validation to reject inactive presidents-pick prize ID");
+    });
+
     test("Validation rejects negative and fractional allocation values", function () {
       const negative = createValidEntry({
-        allocations: { p1: -1, p2: 21, p3: 0, p4: 0, p5: 0 },
+        allocations: allocationFromLegacyShape({ p1: -1, p2: 21, p3: 0, p4: 0, p5: 0 }),
         totalTickets: 20
       });
 
@@ -167,7 +202,7 @@
       assert(negativeRejected, "Negative allocation should be rejected");
 
       const fractional = createValidEntry({
-        allocations: { p1: 10.5, p2: 9.5, p3: 0, p4: 0, p5: 0 },
+        allocations: allocationFromLegacyShape({ p1: 10.5, p2: 9.5, p3: 0, p4: 0, p5: 0 }),
         totalTickets: 20
       });
 
@@ -184,7 +219,7 @@
     test("Validation rejects duplicate submission IDs", function () {
       const duplicate = createValidEntry({
         submissionId: "dup-submission-id-1",
-        allocations: { p1: 20, p2: 0, p3: 0, p4: 0, p5: 0 },
+        allocations: allocationFromLegacyShape({ p1: 20, p2: 0, p3: 0, p4: 0, p5: 0 }),
         totalTickets: 20
       });
 
@@ -214,14 +249,14 @@
           participantName: "Jamie T",
           firstName: "Jamie",
           lastInitial: "T",
-          allocations: { p1: 4, p2: 0, p3: 1, p4: 0, p5: 0 }
+          allocations: allocationFromLegacyShape({ p1: 4, p2: 0, p3: 1, p4: 0, p5: 0 })
         }
       ];
 
       const rows = appHooks.buildAdminExportRows(submissions);
       assert(rows.length === 2, "Expected rows only for prizes with tickets");
-      assert(rows.some(function (row) { return row.prizeId === "p1"; }), "Expected prize p1 row");
-      assert(rows.some(function (row) { return row.prizeId === "p3"; }), "Expected prize p3 row");
+      assert(rows.some(function (row) { return row.prizeId === ACTIVE_IDS.p1; }), "Expected prize p1 row");
+      assert(rows.some(function (row) { return row.prizeId === ACTIVE_IDS.p3; }), "Expected prize p3 row");
 
       const csv = appHooks.buildAdminExportCsv(submissions);
       assert(csv.includes("mode"), "CSV header missing mode");
@@ -238,13 +273,13 @@
           submissionId: "sparse-1",
           submittedAt: "2026-07-11T12:00:00.000Z",
           participantName: "Jamie T",
-          allocations: { p1: 20 }
+          allocations: { [ACTIVE_IDS.p1]: 20 }
         }
       ];
 
       const standardRows = appHooks.buildAdminExportRows(submissions);
       assert(standardRows.length === 1, "Sparse allocations should export one standard row");
-      assert(standardRows[0].prizeId === "p1", "Sparse export row should use p1");
+      assert(standardRows[0].prizeId === ACTIVE_IDS.p1, "Sparse export row should use p1");
 
       const ticketPoolRows = appHooks.buildTicketPoolRows(submissions);
       assert(ticketPoolRows.length === 20, "Sparse allocations should expand to 20 ticket pool rows");
@@ -258,7 +293,7 @@
           submissionId: "s1",
           submittedAt: "2026-07-11T12:00:00.000Z",
           participantName: "Jamie T",
-          allocations: { p1: 2, p2: 0, p3: 1, p4: 0, p5: 0 }
+          allocations: allocationFromLegacyShape({ p1: 2, p2: 0, p3: 1, p4: 0, p5: 0 })
         },
         {
           mode: "pilot",
@@ -266,15 +301,15 @@
           submissionId: "s2",
           submittedAt: "2026-07-11T12:01:00.000Z",
           participantName: "Alex R",
-          allocations: { p1: 1, p2: 0, p3: 2, p4: 0, p5: 0 }
+          allocations: allocationFromLegacyShape({ p1: 1, p2: 0, p3: 2, p4: 0, p5: 0 })
         }
       ];
 
       const rows = appHooks.buildTicketPoolRows(submissions);
       assert(rows.length === 6, "Ticket pool should expand to 6 rows");
 
-      const p1Rows = rows.filter(function (row) { return row.prizeId === "p1"; });
-      const p3Rows = rows.filter(function (row) { return row.prizeId === "p3"; });
+      const p1Rows = rows.filter(function (row) { return row.prizeId === ACTIVE_IDS.p1; });
+      const p3Rows = rows.filter(function (row) { return row.prizeId === ACTIVE_IDS.p3; });
       assert(p1Rows[0].ticketNumber === 1, "Prize p1 numbering should start at 1");
       assert(p3Rows[0].ticketNumber === 1, "Prize p3 numbering should restart at 1");
 
@@ -286,10 +321,10 @@
     test("Admin totals summarize submissions and ticket count", function () {
       const submissions = [
         {
-          allocations: { p1: 10, p2: 5, p3: 5, p4: 0, p5: 0 }
+          allocations: allocationFromLegacyShape({ p1: 10, p2: 5, p3: 5, p4: 0, p5: 0 })
         },
         {
-          allocations: { p1: 0, p2: 0, p3: 8, p4: 2, p5: 10 }
+          allocations: allocationFromLegacyShape({ p1: 0, p2: 0, p3: 8, p4: 2, p5: 10 })
         }
       ];
 
