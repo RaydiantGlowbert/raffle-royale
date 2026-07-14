@@ -817,6 +817,7 @@ function renderRaffleStep() {
     const includesMarkup = includesItems.length
       ? includesItems.map((item) => `<li>${escapeHtml(item)}</li>`).join("")
       : "<li>Details coming soon.</li>";
+    const teaserText = escapeHtml(prize.teaser || prize.description || "Placeholder prize package.");
 
     return `
       <article class="prize-card ${isFlipped ? "is-flipped" : ""}" data-prize-card data-prize-id="${prize.id}">
@@ -830,9 +831,11 @@ function renderRaffleStep() {
                 loading="lazy"
               />
             </div>
-            <h2 class="prize-name">${escapeHtml(prize.name)}</h2>
-            <p class="winner-count">Winners: ${Number(prize.winnerCount || 0)}</p>
-            <p class="prize-description">${escapeHtml(prize.description || "Placeholder prize package.")}</p>
+            <div class="prize-front-content">
+              <h2 class="prize-name">${escapeHtml(prize.name)}</h2>
+              <p class="winner-count" aria-label="${Number(prize.winnerCount || 0)} winners">${Number(prize.winnerCount || 0)} Winners</p>
+              <p class="prize-teaser">${teaserText}</p>
+            </div>
             <button
               class="secondary-btn prize-flip-btn"
               type="button"
@@ -840,7 +843,7 @@ function renderRaffleStep() {
               aria-label="View included details for ${escapeHtml(prize.name)}"
               aria-expanded="${isFlipped ? "true" : "false"}"
             >
-              View What's Included
+              View Details
             </button>
             <div class="ticket-controls">
               <button
@@ -868,10 +871,13 @@ function renderRaffleStep() {
           </section>
 
           <section class="prize-face prize-face-back" aria-hidden="${isFlipped ? "false" : "true"}">
-            <h3 class="prize-includes-heading">Includes</h3>
-            <ul class="prize-includes-list" aria-label="Included items for ${escapeHtml(prize.name)}">
-              ${includesMarkup}
-            </ul>
+            <h2 class="prize-name">${escapeHtml(prize.name)}</h2>
+            <h3 class="prize-includes-heading">Included in This Prize</h3>
+            <div class="prize-back-content">
+              <ul class="prize-includes-list" aria-label="Included items for ${escapeHtml(prize.name)}">
+                ${includesMarkup}
+              </ul>
+            </div>
             <button
               class="secondary-btn prize-back-btn"
               type="button"
