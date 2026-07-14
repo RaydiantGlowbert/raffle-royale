@@ -228,7 +228,12 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: var(--shadow-md);
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   overflow: hidden;
+}
+
+.prize-face-front {
+  transform: rotateY(0deg);
 }
 
 .prize-face-back {
