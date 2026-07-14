@@ -200,6 +200,25 @@ body {
 }
 
 .prize-card {
+  min-height: 31.5rem;
+  perspective: 1200px;
+}
+
+.prize-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 320ms ease;
+}
+
+.prize-card.is-flipped .prize-card-inner {
+  transform: rotateY(180deg);
+}
+
+.prize-face {
+  position: absolute;
+  inset: 0;
   display: grid;
   gap: var(--space-3);
   padding: var(--space-4);
@@ -207,6 +226,16 @@ body {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: var(--shadow-md);
+  backface-visibility: hidden;
+}
+
+.prize-face-front {
+  grid-template-rows: auto auto auto 1fr auto auto;
+}
+
+.prize-face-back {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  transform: rotateY(180deg);
 }
 
 .prize-media {
@@ -229,10 +258,48 @@ body {
   font-weight: 700;
 }
 
+.winner-count {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 .prize-description {
   color: var(--text-secondary);
   font-size: 0.9rem;
-  min-height: 2.5em;
+  min-height: 3.8em;
+}
+
+.prize-flip-btn,
+.prize-back-btn {
+  align-self: start;
+}
+
+.prize-flip-btn:focus-visible,
+.prize-back-btn:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+.prize-includes-heading {
+  font-size: 1rem;
+  color: var(--accent-gold);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.prize-includes-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--text-secondary);
+  display: grid;
+  gap: var(--space-2);
+  overflow: auto;
+}
+
+.prize-includes-list li {
+  line-height: 1.35;
 }
 
 .ticket-controls {
@@ -432,6 +499,10 @@ body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .prize-card {
+    min-height: 34rem;
+  }
+
   .raffle-header {
     align-items: flex-start;
   }
@@ -440,6 +511,10 @@ body {
 @media (max-width: 420px) {
   .card-grid {
     grid-template-columns: 1fr;
+  }
+
+  .prize-card {
+    min-height: 29.5rem;
   }
 
   .saved-entry-header {
@@ -462,5 +537,30 @@ body {
 
   .submit-wrap .primary-btn {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prize-card-inner {
+    transform: none;
+    transition: none;
+  }
+
+  .prize-face {
+    position: static;
+    transform: none;
+    backface-visibility: visible;
+  }
+
+  .prize-face-back {
+    display: none;
+  }
+
+  .prize-card.is-flipped .prize-face-front {
+    display: none;
+  }
+
+  .prize-card.is-flipped .prize-face-back {
+    display: grid;
   }
 }

@@ -10,6 +10,7 @@ const state = {
   participantCompletion: getParticipantCompletionStatus(),
   name: "",
   nameDraft: "",
+  flippedPrizeId: "",
   allocations: Object.fromEntries(PRIZES.map((prize) => [prize.id, 0])),
   isSubmitting: false,
   lastSubmission: null,
@@ -36,11 +37,20 @@ const appRoot = document.getElementById("app");
 function resetEntryState() {
   state.name = "";
   state.nameDraft = "";
+  state.flippedPrizeId = "";
   state.allocations = Object.fromEntries(PRIZES.map((prize) => [prize.id, 0]));
   state.isSubmitting = false;
   state.lastSubmission = null;
   state.submissionFailureCount = 0;
   state.lastSubmissionFailureAt = "";
+}
+
+function togglePrizeCardFlip(prizeId) {
+  if (!prizeId) {
+    return;
+  }
+
+  state.flippedPrizeId = state.flippedPrizeId === prizeId ? "" : prizeId;
 }
 
 function hasParticipantCompletionLock() {
@@ -802,41 +812,75 @@ function renderRaffleStep() {
 
   const cardsMarkup = PRIZES.map((prize) => {
     const count = state.allocations[prize.id];
+    const isFlipped = state.flippedPrizeId === prize.id;
+    const includesItems = Array.isArray(prize.includes) ? prize.includes : [];
+    const includesMarkup = includesItems.length
+      ? includesItems.map((item) => `<li>${escapeHtml(item)}</li>`).join("")
+      : "<li>Details coming soon.</li>";
 
     return `
-      <article class="prize-card">
-        <div class="prize-media">
-          <img
-            class="prize-image"
-            src="${escapeHtml(prize.image)}"
-            alt="${escapeHtml(prize.imageAlt || prize.name)}"
-            loading="lazy"
-          />
-        </div>
-        <h2 class="prize-name">${escapeHtml(prize.name)}</h2>
-        <p class="prize-description">${escapeHtml(prize.description || "Placeholder prize package.")}</p>
-        <div class="ticket-controls">
-          <button
-            class="ticket-btn"
-            type="button"
-            data-action="decrement"
-            data-prize-id="${prize.id}"
-            aria-label="Remove ticket from ${escapeHtml(prize.name)}"
-            ${count === 0 ? "disabled" : ""}
-          >
-            -
-          </button>
-          <span class="ticket-count" aria-label="${count} tickets assigned">${count}</span>
-          <button
-            class="ticket-btn"
-            type="button"
-            data-action="increment"
-            data-prize-id="${prize.id}"
-            aria-label="Add ticket to ${escapeHtml(prize.name)}"
-            ${remaining === 0 ? "disabled" : ""}
-          >
-            +
-          </button>
+      <article class="prize-card ${isFlipped ? "is-flipped" : ""}" data-prize-card data-prize-id="${prize.id}">
+        <div class="prize-card-inner">
+          <section class="prize-face prize-face-front" aria-hidden="${isFlipped ? "true" : "false"}">
+            <div class="prize-media">
+              <img
+                class="prize-image"
+                src="${escapeHtml(prize.image)}"
+                alt="${escapeHtml(prize.imageAlt || prize.name)}"
+                loading="lazy"
+              />
+            </div>
+            <h2 class="prize-name">${escapeHtml(prize.name)}</h2>
+            <p class="winner-count">Winners: ${Number(prize.winnerCount || 0)}</p>
+            <p class="prize-description">${escapeHtml(prize.description || "Placeholder prize package.")}</p>
+            <button
+              class="secondary-btn prize-flip-btn"
+              type="button"
+              data-prize-view-includes="${prize.id}"
+              aria-label="View included details for ${escapeHtml(prize.name)}"
+              aria-expanded="${isFlipped ? "true" : "false"}"
+            >
+              View What's Included
+            </button>
+            <div class="ticket-controls">
+              <button
+                class="ticket-btn"
+                type="button"
+                data-action="decrement"
+                data-prize-id="${prize.id}"
+                aria-label="Remove ticket from ${escapeHtml(prize.name)}"
+                ${count === 0 ? "disabled" : ""}
+              >
+                -
+              </button>
+              <span class="ticket-count" aria-label="${count} tickets assigned">${count}</span>
+              <button
+                class="ticket-btn"
+                type="button"
+                data-action="increment"
+                data-prize-id="${prize.id}"
+                aria-label="Add ticket to ${escapeHtml(prize.name)}"
+                ${remaining === 0 ? "disabled" : ""}
+              >
+                +
+              </button>
+            </div>
+          </section>
+
+          <section class="prize-face prize-face-back" aria-hidden="${isFlipped ? "false" : "true"}">
+            <h3 class="prize-includes-heading">Includes</h3>
+            <ul class="prize-includes-list" aria-label="Included items for ${escapeHtml(prize.name)}">
+              ${includesMarkup}
+            </ul>
+            <button
+              class="secondary-btn prize-back-btn"
+              type="button"
+              data-prize-back="${prize.id}"
+              aria-label="Back to ${escapeHtml(prize.name)} details"
+            >
+              Back to Prize
+            </button>
+          </section>
         </div>
       </article>
     `;
@@ -872,7 +916,8 @@ function renderRaffleStep() {
 
   const controls = appRoot.querySelectorAll(".ticket-btn");
   controls.forEach((button) => {
-    button.addEventListener("click", () => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
       const prizeId = button.getAttribute("data-prize-id");
       const action = button.getAttribute("data-action");
 
@@ -882,6 +927,42 @@ function renderRaffleStep() {
 
       state.allocations = applyTicketAction(state.allocations, action, prizeId);
 
+      render();
+    });
+  });
+
+  const viewIncludesButtons = appRoot.querySelectorAll("[data-prize-view-includes]");
+  viewIncludesButtons.forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const prizeId = button.getAttribute("data-prize-view-includes");
+      togglePrizeCardFlip(prizeId);
+      render();
+    });
+  });
+
+  const backButtons = appRoot.querySelectorAll("[data-prize-back]");
+  backButtons.forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      state.flippedPrizeId = "";
+      render();
+    });
+  });
+
+  const prizeCards = appRoot.querySelectorAll("[data-prize-card]");
+  prizeCards.forEach((card) => {
+    card.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+
+      if (target.closest(".ticket-controls") || target.closest(".prize-flip-btn") || target.closest(".prize-back-btn")) {
+        return;
+      }
+
+      togglePrizeCardFlip(card.getAttribute("data-prize-id"));
       render();
     });
   });
