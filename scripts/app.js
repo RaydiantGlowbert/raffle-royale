@@ -822,7 +822,7 @@ function renderRaffleStep() {
     return `
       <article class="prize-card ${isFlipped ? "is-flipped" : ""}" data-prize-card data-prize-id="${prize.id}">
         <div class="prize-card-inner">
-          <section class="prize-face prize-face-front" aria-hidden="${isFlipped ? "true" : "false"}">
+          <section class="prize-face prize-face-front" aria-hidden="${isFlipped ? "true" : "false"}"${isFlipped ? " inert" : ""}>
             <div class="prize-media">
               <img
                 class="prize-image"
@@ -870,7 +870,7 @@ function renderRaffleStep() {
             </div>
           </section>
 
-          <section class="prize-face prize-face-back" aria-hidden="${isFlipped ? "false" : "true"}">
+          <section class="prize-face prize-face-back" aria-hidden="${isFlipped ? "false" : "true"}"${isFlipped ? "" : " inert"}>
             <h2 class="prize-name">${escapeHtml(prize.name)}</h2>
             <h3 class="prize-includes-heading">Included in This Prize</h3>
             <div class="prize-back-content">
