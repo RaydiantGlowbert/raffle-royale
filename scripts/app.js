@@ -29,6 +29,9 @@ const state = {
   adminLoadErrorCode: "",
   adminLoadError: "",
   adminUseLocalPilotData: false,
+  openEventInfoPanelId: "",
+  isImportantRulesOpen: false,
+  suppressEventInfoFocusOpenForId: "",
   notice: ""
 };
 
@@ -43,6 +46,9 @@ function resetEntryState() {
   state.lastSubmission = null;
   state.submissionFailureCount = 0;
   state.lastSubmissionFailureAt = "";
+  state.openEventInfoPanelId = "";
+  state.isImportantRulesOpen = false;
+  state.suppressEventInfoFocusOpenForId = "";
 }
 
 function togglePrizeCardFlip(prizeId) {
@@ -51,6 +57,257 @@ function togglePrizeCardFlip(prizeId) {
   }
 
   state.flippedPrizeId = state.flippedPrizeId === prizeId ? "" : prizeId;
+}
+
+const EVENT_TIMELINE_ITEMS = [
+  {
+    id: "timeline-kickoff",
+    icon: "🎲",
+    title: "Raffle Kickoff",
+    shortDate: "September 2",
+    date: "Wednesday, September 2",
+    details: "The Raffle Royale experience officially begins. Explore the prizes, learn how the raffle works, and start planning your strategy."
+  },
+  {
+    id: "timeline-bidding-window",
+    icon: "🎟️",
+    title: "Bidding Window",
+    shortDate: "September 16-23",
+    date: "Wednesday, September 16–Wednesday, September 23",
+    details: "You will receive 20 raffle tickets to distribute across the prizes you want most. Go all in on one prize or spread your tickets across several."
+  },
+  {
+    id: "timeline-winners-announced",
+    icon: "🏆",
+    title: "Winners Announced",
+    shortDate: "October 6",
+    date: "Tuesday, October 6",
+    details: "Winners will be revealed during the SuperTeam meeting."
+  }
+];
+
+const HOW_IT_WORKS_ITEMS = [
+  {
+    stepLabel: "①",
+    title: "Explore the Prizes",
+    details: "Review each prize and select View Details to see exactly what is included."
+  },
+  {
+    stepLabel: "②",
+    title: "Spend Your 20 Tickets",
+    details: "Distribute all 20 tickets however you choose."
+  },
+  {
+    stepLabel: "③",
+    title: "Review and Submit",
+    details: "Confirm your selections and submit one final entry during the bidding window."
+  },
+  {
+    stepLabel: "④",
+    title: "Watch for the Winners",
+    details: "Winners will be announced during the SuperTeam meeting on Tuesday, October 6."
+  }
+];
+
+const IMPORTANT_RULES_ITEMS = [
+  "Tickets represent raffle entries, not money.",
+  "More tickets placed on a prize means more entries in that prize's drawing.",
+  "All 20 tickets must be allocated before submission.",
+  "Once you win a prize, you will be removed from all remaining prize drawings, giving more participants a chance to win."
+];
+
+function buildTimelineCardMarkup(item) {
+  const panelId = `event-info-panel-${item.id}`;
+  const isOpen = state.openEventInfoPanelId === item.id;
+
+  return `
+    <article class="event-info-card-wrap timeline-card-wrap" data-event-panel-item="${escapeHtml(item.id)}">
+      <button
+        class="event-info-card timeline-info-card"
+        type="button"
+        data-event-panel-trigger="${escapeHtml(item.id)}"
+        aria-expanded="${isOpen ? "true" : "false"}"
+        aria-controls="${escapeHtml(panelId)}"
+      >
+        <span class="timeline-marker" aria-hidden="true">
+          <span class="event-card-icon">${escapeHtml(item.icon)}</span>
+        </span>
+        <span class="event-card-title">${escapeHtml(item.title)}</span>
+        <span class="event-card-subtitle timeline-date-emphasis">${escapeHtml(item.date || item.shortDate || "")}</span>
+        <span class="event-card-cue">Learn More →</span>
+      </button>
+      <div
+        class="event-detail-panel timeline-detail-panel"
+        id="${escapeHtml(panelId)}"
+        data-event-panel="${escapeHtml(item.id)}"
+        aria-hidden="${isOpen ? "false" : "true"}"
+        ${isOpen ? "" : "inert"}
+      >
+        <div class="event-detail-header">
+          <span class="event-detail-icon" aria-hidden="true">${escapeHtml(item.icon)}</span>
+          <div class="event-detail-headline">
+            <h3 class="event-detail-title">${escapeHtml(item.title)}</h3>
+            <p class="event-detail-meta">${escapeHtml(item.date)}</p>
+          </div>
+        </div>
+        <p class="event-detail-body">${escapeHtml(item.details)}</p>
+        <button class="event-panel-close" type="button" data-event-panel-close="${escapeHtml(item.id)}">Close</button>
+      </div>
+    </article>
+  `;
+}
+
+function buildHowStepCardMarkup(item) {
+  return `
+    <article class="event-info-card-wrap" role="listitem">
+      <div class="event-info-card how-step-card">
+        <p class="how-step-title"><span class="how-step-number">${escapeHtml(item.stepLabel)}</span> ${escapeHtml(item.title)}</p>
+        <p class="how-step-copy">${escapeHtml(item.details)}</p>
+      </div>
+    </article>
+  `;
+}
+
+function buildImportantRulesAccordionMarkup() {
+  const panelId = "event-rules-panel";
+  const isOpen = state.isImportantRulesOpen;
+
+  return `
+    <section class="rules-callout" aria-label="Important raffle rules">
+      <button
+        class="rules-callout-trigger"
+        type="button"
+        data-important-rules-trigger="true"
+        aria-expanded="${isOpen ? "true" : "false"}"
+        aria-controls="${escapeHtml(panelId)}"
+      >
+        <span class="rules-callout-icon" aria-hidden="true">📜</span>
+        <span class="rules-callout-copy">
+          <span class="rules-callout-title">Important Raffle Rules</span>
+          <span class="rules-callout-subtitle">Review the key rules before submitting your entry.</span>
+        </span>
+        <span class="rules-callout-meta">
+          <span class="rules-callout-cue">Review the Rules</span>
+          <span class="rules-callout-chevron" aria-hidden="true">⌄</span>
+        </span>
+      </button>
+      <div
+        class="rules-accordion-panel"
+        id="${escapeHtml(panelId)}"
+        data-important-rules-panel="true"
+        aria-hidden="${isOpen ? "false" : "true"}"
+        ${isOpen ? "" : "inert"}
+      >
+        <ul class="event-panel-rules-list">${IMPORTANT_RULES_ITEMS.map((rule) => `<li>${escapeHtml(rule)}</li>`).join("")}</ul>
+        <button class="event-panel-close" type="button" data-important-rules-close="true">Close</button>
+      </div>
+    </section>
+  `;
+}
+
+function setOpenEventInfoPanel(panelId, options = {}) {
+  const { returnFocus = false, focusTriggerId = "" } = options;
+  const eventInfoRoot = appRoot.querySelector(".event-info");
+  const allPanelIds = new Set([
+    ...EVENT_TIMELINE_ITEMS.map((item) => item.id),
+    ...EVENT_TIMELINE_ITEMS.map((item) => item.id)
+  ]);
+
+  state.openEventInfoPanelId = allPanelIds.has(panelId) ? panelId : "";
+
+  if (!eventInfoRoot) {
+    return;
+  }
+
+  const triggers = eventInfoRoot.querySelectorAll("[data-event-panel-trigger]");
+  const panels = eventInfoRoot.querySelectorAll("[data-event-panel]");
+
+  triggers.forEach((trigger) => {
+    const triggerPanelId = trigger.getAttribute("data-event-panel-trigger");
+    trigger.setAttribute("aria-expanded", String(triggerPanelId === state.openEventInfoPanelId));
+  });
+
+  panels.forEach((panel) => {
+    const thisPanelId = panel.getAttribute("data-event-panel");
+    const isOpen = thisPanelId === state.openEventInfoPanelId;
+    panel.setAttribute("aria-hidden", isOpen ? "false" : "true");
+    if (isOpen) {
+      panel.removeAttribute("inert");
+    } else {
+      panel.setAttribute("inert", "");
+    }
+  });
+
+  if (returnFocus) {
+    const targetId = focusTriggerId || panelId;
+    const focusTarget = eventInfoRoot.querySelector(`[data-event-panel-trigger="${targetId}"]`);
+    if (focusTarget instanceof HTMLElement) {
+      state.suppressEventInfoFocusOpenForId = targetId;
+      focusTarget.focus();
+      window.requestAnimationFrame(() => {
+        if (state.suppressEventInfoFocusOpenForId === targetId) {
+          state.suppressEventInfoFocusOpenForId = "";
+        }
+      });
+    }
+  }
+}
+
+function setImportantRulesOpen(isOpen, options = {}) {
+  const { returnFocus = false } = options;
+  const eventInfoRoot = appRoot.querySelector(".event-info");
+  state.isImportantRulesOpen = Boolean(isOpen);
+
+  if (!eventInfoRoot) {
+    return;
+  }
+
+  const trigger = eventInfoRoot.querySelector("[data-important-rules-trigger]");
+  const panel = eventInfoRoot.querySelector("[data-important-rules-panel]");
+
+  if (trigger instanceof HTMLElement) {
+    trigger.setAttribute("aria-expanded", String(state.isImportantRulesOpen));
+  }
+
+  if (panel instanceof HTMLElement) {
+    panel.setAttribute("aria-hidden", state.isImportantRulesOpen ? "false" : "true");
+    panel.classList.toggle("is-open", state.isImportantRulesOpen);
+    if (state.isImportantRulesOpen) {
+      panel.removeAttribute("inert");
+    } else {
+      panel.setAttribute("inert", "");
+    }
+  }
+
+  if (returnFocus) {
+    const focusTarget = eventInfoRoot.querySelector("[data-important-rules-trigger]");
+    if (focusTarget instanceof HTMLElement) {
+      focusTarget.focus();
+    }
+  }
+}
+
+function handleEventInfoEscapeKeydown(event) {
+  if (event.key !== "Escape") {
+    return;
+  }
+
+  const eventInfoRoot = appRoot.querySelector(".event-info");
+  if (!eventInfoRoot) {
+    return;
+  }
+
+  if (state.openEventInfoPanelId) {
+    event.preventDefault();
+    const previousTimelineId = state.openEventInfoPanelId;
+    setOpenEventInfoPanel("", { returnFocus: true, focusTriggerId: previousTimelineId });
+    return;
+  }
+
+  if (state.isImportantRulesOpen) {
+    event.preventDefault();
+    setImportantRulesOpen(false, { returnFocus: true });
+  }
 }
 
 function hasParticipantCompletionLock() {
@@ -910,6 +1167,14 @@ function renderRaffleStep() {
     `;
   }).join("");
 
+  const timelineMarkup = EVENT_TIMELINE_ITEMS
+    .map((item) => buildTimelineCardMarkup(item))
+    .join("");
+  const howItWorksMarkup = HOW_IT_WORKS_ITEMS
+    .map((item) => buildHowStepCardMarkup(item))
+    .join("");
+  const rulesMarkup = buildImportantRulesAccordionMarkup();
+
   appRoot.innerHTML = `
     <main class="app-shell" aria-live="polite">
       <header class="participant-hero" aria-label="Raffle hero">
@@ -943,6 +1208,27 @@ function renderRaffleStep() {
         <div class="hero-divider" aria-hidden="true"></div>
       </header>
       ${state.notice ? `<p class="status-message">${escapeHtml(state.notice)}</p>` : ""}
+
+      <section class="event-info" aria-labelledby="event-info-heading">
+        <div class="event-hype" aria-labelledby="event-info-heading">
+          <h2 class="event-hype-title" id="event-info-heading">Welcome to Raffle Royale</h2>
+          <p class="event-hype-lead">Twenty tickets. Eleven prizes. One strategy. How will you play?</p>
+        </div>
+
+        <section class="event-timeline" aria-label="Event timeline">
+          ${timelineMarkup}
+        </section>
+
+        <section class="how-it-works" aria-labelledby="how-it-works-heading">
+          <h2 class="how-it-works-title" id="how-it-works-heading">How Raffle Royale Works</h2>
+          <div class="how-it-works-steps" role="list">
+            ${howItWorksMarkup}
+          </div>
+          <div class="important-rules-wrap">
+            ${rulesMarkup}
+          </div>
+        </section>
+      </section>
 
       <section class="card-grid" aria-label="Prize ticket allocation cards">
         ${cardsMarkup}
@@ -1010,6 +1296,118 @@ function renderRaffleStep() {
       render();
     });
   });
+
+  const eventInfoRoot = appRoot.querySelector(".event-info");
+  const supportsHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  document.removeEventListener("keydown", handleEventInfoEscapeKeydown);
+  setOpenEventInfoPanel(state.openEventInfoPanelId);
+  setImportantRulesOpen(state.isImportantRulesOpen);
+
+  if (eventInfoRoot) {
+    const triggerButtons = eventInfoRoot.querySelectorAll(".event-timeline [data-event-panel-trigger]");
+    const closeButtons = eventInfoRoot.querySelectorAll("[data-event-panel-close]");
+    const triggerItems = eventInfoRoot.querySelectorAll(".event-timeline [data-event-panel-item]");
+    const rulesTriggerButton = eventInfoRoot.querySelector("[data-important-rules-trigger]");
+    const rulesCloseButton = eventInfoRoot.querySelector("[data-important-rules-close]");
+
+    triggerButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const panelId = button.getAttribute("data-event-panel-trigger") || "";
+        const shouldClose = state.openEventInfoPanelId === panelId;
+        setOpenEventInfoPanel(shouldClose ? "" : panelId);
+      });
+
+      button.addEventListener("keydown", (event) => {
+        if (event.key !== " " && event.key !== "Enter") {
+          return;
+        }
+
+        event.preventDefault();
+        const panelId = button.getAttribute("data-event-panel-trigger") || "";
+        const shouldClose = state.openEventInfoPanelId === panelId;
+        setOpenEventInfoPanel(shouldClose ? "" : panelId);
+      });
+    });
+
+    eventInfoRoot.addEventListener("focusin", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+
+      const trigger = target.closest(".event-timeline [data-event-panel-trigger]");
+      if (!(trigger instanceof HTMLElement)) {
+        return;
+      }
+
+      const panelId = trigger.getAttribute("data-event-panel-trigger") || "";
+
+      if (state.suppressEventInfoFocusOpenForId === panelId) {
+        state.suppressEventInfoFocusOpenForId = "";
+        return;
+      }
+
+      setOpenEventInfoPanel(panelId);
+    });
+
+    if (supportsHover) {
+      triggerButtons.forEach((button) => {
+        button.addEventListener("mouseenter", () => {
+          const panelId = button.getAttribute("data-event-panel-trigger") || "";
+          button.setAttribute("data-open-source", "hover");
+          setOpenEventInfoPanel(panelId);
+        });
+      });
+
+      triggerItems.forEach((item) => {
+        item.addEventListener("mouseleave", () => {
+          const panelId = item.getAttribute("data-event-panel-item") || "";
+          if (panelId !== state.openEventInfoPanelId) {
+            return;
+          }
+
+          const trigger = item.querySelector("[data-event-panel-trigger]");
+          const openedByHover = trigger?.getAttribute("data-open-source") === "hover";
+          const activeElement = document.activeElement;
+          const focusInside = activeElement instanceof Element ? item.contains(activeElement) : false;
+
+          if (openedByHover && !focusInside) {
+            setOpenEventInfoPanel("");
+          }
+        });
+      });
+    }
+
+    closeButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const panelId = button.getAttribute("data-event-panel-close") || "";
+        setOpenEventInfoPanel("", { returnFocus: true, focusTriggerId: panelId });
+      });
+    });
+
+    if (rulesTriggerButton instanceof HTMLElement) {
+      rulesTriggerButton.addEventListener("click", () => {
+        setImportantRulesOpen(!state.isImportantRulesOpen);
+      });
+
+      rulesTriggerButton.addEventListener("keydown", (event) => {
+        if (event.key !== " " && event.key !== "Enter") {
+          return;
+        }
+
+        event.preventDefault();
+        setImportantRulesOpen(!state.isImportantRulesOpen);
+      });
+    }
+
+    if (rulesCloseButton instanceof HTMLElement) {
+      rulesCloseButton.addEventListener("click", () => {
+        setImportantRulesOpen(false, { returnFocus: true });
+      });
+    }
+
+    document.addEventListener("keydown", handleEventInfoEscapeKeydown);
+  }
 
   document.getElementById("review-btn").addEventListener("click", () => {
     if (getTotalAllocated() !== TOTAL_TICKETS) {
