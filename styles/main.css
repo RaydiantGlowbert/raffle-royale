@@ -271,15 +271,6 @@ body {
   display: block;
 }
 
-.prize-badge-image {
-  width: clamp(3rem, 9vw, 3.5rem);
-  height: clamp(3rem, 9vw, 3.5rem);
-  object-fit: contain;
-  align-self: center;
-  margin-top: var(--space-1);
-  margin-bottom: var(--space-1);
-}
-
 .prize-name {
   font-size: 1rem;
   font-weight: 700;
