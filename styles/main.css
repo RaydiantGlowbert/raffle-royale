@@ -60,6 +60,17 @@ body {
   text-shadow: 0 4px 18px rgba(247, 190, 75, 0.34);
 }
 
+.app-hero-logo {
+  width: min(420px, 100%);
+  height: auto;
+  display: block;
+  margin: 0 auto var(--space-3);
+}
+
+.app-hero-logo.is-hidden {
+  display: none;
+}
+
 .app-subtitle {
   color: var(--text-secondary);
   text-align: center;

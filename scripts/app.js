@@ -745,6 +745,14 @@ function renderParticipantCompletedStep() {
 function renderNameStep(errorMessage = "") {
   appRoot.innerHTML = `
     <main class="app-shell" aria-live="polite">
+      <img
+        class="app-hero-logo"
+        src="assets/images/raffle-royale-logo.png"
+        alt="Raffle Royale logo"
+        loading="eager"
+        decoding="async"
+        onerror="this.classList.add('is-hidden'); this.setAttribute('aria-hidden', 'true');"
+      />
       <h1 class="app-title">Raffle Royale</h1>
       ${getPilotBannerMarkup()}
       <p class="app-subtitle">Enter your name as First Name + Last Initial (example: Alex R).</p>
@@ -896,6 +904,14 @@ function renderRaffleStep() {
 
   appRoot.innerHTML = `
     <main class="app-shell" aria-live="polite">
+      <img
+        class="app-hero-logo"
+        src="assets/images/raffle-royale-logo.png"
+        alt="Raffle Royale logo"
+        loading="eager"
+        decoding="async"
+        onerror="this.classList.add('is-hidden'); this.setAttribute('aria-hidden', 'true');"
+      />
       <h1 class="app-title">Raffle Royale</h1>
       ${getPilotBannerMarkup()}
       <p class="app-subtitle">Allocate all ${TOTAL_TICKETS} tickets before continuing to review.</p>
