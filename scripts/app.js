@@ -745,17 +745,25 @@ function renderParticipantCompletedStep() {
 function renderNameStep(errorMessage = "") {
   appRoot.innerHTML = `
     <main class="app-shell" aria-live="polite">
-      <img
-        class="app-hero-logo"
-        src="assets/images/raffle-royale-logo.png"
-        alt="Raffle Royale logo"
-        loading="eager"
-        decoding="async"
-        onerror="this.classList.add('is-hidden'); this.setAttribute('aria-hidden', 'true');"
-      />
-      <h1 class="app-title">Raffle Royale</h1>
-      ${getPilotBannerMarkup()}
-      <p class="app-subtitle">Enter your name as First Name + Last Initial (example: Alex R).</p>
+      <header class="participant-hero" aria-label="Raffle hero">
+        <h1 class="visually-hidden">Raffle Royale</h1>
+        <div class="participant-hero-logo-wrap" aria-hidden="true">
+          <img
+            class="app-hero-logo"
+            src="assets/images/raffle-royale-logo.png"
+            alt="Raffle Royale logo"
+            loading="eager"
+            decoding="async"
+            onerror="this.classList.add('is-hidden'); this.setAttribute('aria-hidden', 'true');"
+          />
+        </div>
+        ${getPilotBannerMarkup()}
+        <div class="participant-hero-intro" aria-label="Event introduction">
+          <p class="app-subtitle hero-intro">Choose how you'll spend your 20 raffle tickets.</p>
+          <p class="app-subtitle hero-intro hero-intro-secondary">Go all in on one prize, or spread your chances across several.</p>
+        </div>
+        <div class="hero-divider" aria-hidden="true"></div>
+      </header>
       ${state.notice ? `<p class="status-message">${escapeHtml(state.notice)}</p>` : ""}
 
       <form class="name-form" id="name-form" novalidate>
@@ -904,25 +912,37 @@ function renderRaffleStep() {
 
   appRoot.innerHTML = `
     <main class="app-shell" aria-live="polite">
-      <img
-        class="app-hero-logo"
-        src="assets/images/raffle-royale-logo.png"
-        alt="Raffle Royale logo"
-        loading="eager"
-        decoding="async"
-        onerror="this.classList.add('is-hidden'); this.setAttribute('aria-hidden', 'true');"
-      />
-      <h1 class="app-title">Raffle Royale</h1>
-      ${getPilotBannerMarkup()}
-      <p class="app-subtitle">Allocate all ${TOTAL_TICKETS} tickets before continuing to review.</p>
+      <header class="participant-hero" aria-label="Raffle hero">
+        <h1 class="visually-hidden">Raffle Royale</h1>
+        <div class="participant-hero-logo-wrap" aria-hidden="true">
+          <img
+            class="app-hero-logo"
+            src="assets/images/raffle-royale-logo.png"
+            alt="Raffle Royale logo"
+            loading="eager"
+            decoding="async"
+            onerror="this.classList.add('is-hidden'); this.setAttribute('aria-hidden', 'true');"
+          />
+        </div>
+        ${getPilotBannerMarkup()}
+        <p class="app-subtitle hero-intro">Allocate all ${TOTAL_TICKETS} tickets before continuing to review.</p>
+        <section class="ticket-summary" aria-label="Ticket summary">
+          <article class="ticket-summary-item">
+            <p class="ticket-summary-label">Player</p>
+            <p class="ticket-summary-value">${escapeHtml(state.name)}</p>
+          </article>
+          <article class="ticket-summary-item">
+            <p class="ticket-summary-label">Tickets Allocated</p>
+            <p class="ticket-summary-value">${totalAllocated} / ${TOTAL_TICKETS}</p>
+          </article>
+          <article class="ticket-summary-item">
+            <p class="ticket-summary-label">Tickets Remaining</p>
+            <p class="ticket-summary-value ${readyForReview ? "is-complete" : ""}">${remaining}</p>
+          </article>
+        </section>
+        <div class="hero-divider" aria-hidden="true"></div>
+      </header>
       ${state.notice ? `<p class="status-message">${escapeHtml(state.notice)}</p>` : ""}
-
-      <section class="raffle-header">
-        <p class="participant-chip">Player: ${escapeHtml(state.name)}</p>
-        <p class="remaining-counter ${readyForReview ? "complete" : ""}">
-          Tickets Remaining: ${remaining}
-        </p>
-      </section>
 
       <section class="card-grid" aria-label="Prize ticket allocation cards">
         ${cardsMarkup}
