@@ -9,8 +9,8 @@ const ALL_PRIZE_CONFIG = [
     includes: [
       "One Wellness Recharge Day to focus on rest, reflection, and personal well-being without using your FTO balance (pending final approval)."
     ],
-    image: "assets/images/prize-placeholder.svg",
-    imageAlt: "Placeholder image for Royal Flush Retreat wellness recharge package"
+    image: "assets/images/badges/wellness.png",
+    imageAlt: "Wellness badge for Royal Flush Retreat"
   },
   {
     id: "vegas-main-character",
@@ -25,8 +25,8 @@ const ALL_PRIZE_CONFIG = [
       "A $25 hotel snack basket",
       "A curated assortment of Vegas-themed souvenirs and accessories"
     ],
-    image: "assets/images/prize-placeholder.svg",
-    imageAlt: "Placeholder image for Vegas Main Character Energy VIP Summit experience"
+    image: "assets/images/badges/summit.png",
+    imageAlt: "Summit badge for Vegas Main Character Energy"
   },
   {
     id: "high-roller-time-bank",
@@ -40,8 +40,8 @@ const ALL_PRIZE_CONFIG = [
       "1-Hour Nap Pass: Step away for an hour during your workday to rest, recharge, or simply unplug before returning refreshed.",
       "Camera-Off Pass: Enjoy one meeting with your camera off (when appropriate), giving you a chance to recharge while still fully participating."
     ],
-    image: "assets/images/prize-placeholder.svg",
-    imageAlt: "Placeholder image for High Roller Time Bank flexible workday perk bundle"
+    image: "assets/images/badges/flexibility.png",
+    imageAlt: "Flexibility badge for High Roller Time Bank"
   },
   {
     id: "mentor-mvp-pack",
@@ -54,8 +54,8 @@ const ALL_PRIZE_CONFIG = [
       "Up to $50 to spend in the official WGU Store",
       "Choose your own official WGU-branded apparel, accessories, and merchandise"
     ],
-    image: "assets/images/prize-placeholder.svg",
-    imageAlt: "Placeholder image for Mentor MVP Pack WGU store selection"
+    image: "assets/images/badges/wgu.png",
+    imageAlt: "WGU badge for Mentor MVP Pack"
   },
   {
     id: "double-down-development",
@@ -69,8 +69,8 @@ const ALL_PRIZE_CONFIG = [
       "A personalized note of encouragement",
       "Focus & Reflect Pass (1 Hour): Take one hour during your workday to step away from daily responsibilities and invest in learning, reflection, or professional development."
     ],
-    image: "assets/images/prize-placeholder.svg",
-    imageAlt: "Placeholder image for Double Down on Development growth and learning package"
+    image: "assets/images/badges/growth.png",
+    imageAlt: "Growth badge for Double Down on Development"
   },
   {
     id: "brew-crew-casey",
@@ -84,8 +84,8 @@ const ALL_PRIZE_CONFIG = [
       "Invite one fellow mentor to join you",
       "Casual conversation and networking in a relaxed setting"
     ],
-    image: "assets/images/prize-placeholder.svg",
-    imageAlt: "Placeholder image for Brew Crew with Casey private coffee conversation"
+    image: "assets/images/badges/connection.png",
+    imageAlt: "Connection badge for Brew Crew with Casey"
   },
   {
     id: "good-fortune-giveaway",
@@ -99,8 +99,8 @@ const ALL_PRIZE_CONFIG = [
       "Peer Spotlight Pass",
       "Donation to the WGU Scholarship Fund in your honor"
     ],
-    image: "assets/images/prize-placeholder.svg",
-    imageAlt: "Placeholder image for Good Fortune Giveaway recognition and giving package"
+    image: "assets/images/badges/recognition.png",
+    imageAlt: "Recognition badge for Good Fortune Giveaway"
   },
   {
     id: "wise-mentor-collection",
@@ -112,8 +112,8 @@ const ALL_PRIZE_CONFIG = [
     includes: [
       "A curated assortment of owl-themed gifts and mentor-inspired keepsakes."
     ],
-    image: "assets/images/prize-placeholder.svg",
-    imageAlt: "Placeholder image for Wise Mentor Collection owl-themed keepsakes"
+    image: "assets/images/badges/keepsakes.png",
+    imageAlt: "Keepsakes badge for Wise Mentor Collection"
   },
   {
     id: "casino-royale-collection",
@@ -125,8 +125,8 @@ const ALL_PRIZE_CONFIG = [
     includes: [
       "A curated assortment of casino-themed games, décor, drinkware, and accessories."
     ],
-    image: "assets/images/prize-placeholder.svg",
-    imageAlt: "Placeholder image for Casino Royale Collection games and accessories"
+    image: "assets/images/badges/casino.png",
+    imageAlt: "Casino badge for Casino Royale Collection"
   },
   {
     id: "purr-fect-companion-pack",
@@ -138,8 +138,8 @@ const ALL_PRIZE_CONFIG = [
     includes: [
       "A curated assortment of cat-themed gifts, toys, treats, and home accessories."
     ],
-    image: "assets/images/prize-placeholder.svg",
-    imageAlt: "Placeholder image for Purr-fect Companion Pack cat gift assortment"
+    image: "assets/images/badges/cat.png",
+    imageAlt: "Cat badge for Purr-fect Companion Pack"
   },
   {
     id: "top-dog-pack",
@@ -151,8 +151,8 @@ const ALL_PRIZE_CONFIG = [
     includes: [
       "A curated assortment of dog-themed gifts, toys, treats, and accessories."
     ],
-    image: "assets/images/prize-placeholder.svg",
-    imageAlt: "Placeholder image for Top Dog Pack dog gift assortment"
+    image: "assets/images/badges/dog.png",
+    imageAlt: "Dog badge for Top Dog Pack"
   },
   {
     id: "presidents-pick",
