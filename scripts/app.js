@@ -824,6 +824,16 @@ function renderRaffleStep() {
         <div class="prize-card-inner">
           <section class="prize-face prize-face-front" aria-hidden="${isFlipped ? "true" : "false"}"${isFlipped ? " inert" : ""}>
             <div class="prize-front-content">
+              <div class="prize-media">
+                <img
+                  class="prize-image"
+                  src="${escapeHtml(prize.image || "")}"
+                  alt="${escapeHtml(prize.imageAlt || `${prize.name} artwork`)}"
+                  loading="lazy"
+                  decoding="async"
+                  onerror="this.classList.add('is-hidden'); this.setAttribute('aria-hidden', 'true');"
+                />
+              </div>
               <h2 class="prize-name">${escapeHtml(prize.name)}</h2>
               <p class="winner-count" aria-label="${Number(prize.winnerCount || 0)} winners">${Number(prize.winnerCount || 0)} Winners</p>
               <p class="prize-teaser">${teaserText}</p>
