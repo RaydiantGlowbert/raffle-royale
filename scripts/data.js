@@ -174,7 +174,7 @@ const PRIZES = ALL_PRIZE_CONFIG.filter((prize) => prize.active);
 
 const TOTAL_TICKETS = 20;
 
-const PILOT_MODE = true;
+const PILOT_MODE = false;
 const APP_MODE = PILOT_MODE ? "pilot" : "live";
 
 // Submission mode is local by default for MVP intake testing.
@@ -185,6 +185,6 @@ const SUBMISSION_CONFIG = {
   apiHealthEndpoint: "/api/db-health",
   storageMode: "database", // "database" | "local"
   mirrorLocalStorageOnSuccess: true,
-  eventId: "raffle-royale-2026-final-pilot",
+  eventId: "raffle-royale-2026",
   sourceAppVersion: "v1"
 };

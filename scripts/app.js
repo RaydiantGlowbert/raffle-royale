@@ -1,8 +1,12 @@
 const NAME_FORMAT = /^[A-Za-z]+(?:[\-'][A-Za-z]+)?\s+[A-Za-z]\.?$/;
 const RESET_BROWSER_CONFIRMATION_ONE = "Pilot testing only: this will clear this browser's submission-completed status and assign a new participant ID. Continue?";
 const RESET_BROWSER_CONFIRMATION_TWO = "Confirm browser reset for pilot testing. Admin submissions will remain intact.";
-const CLEAR_ALL_CONFIRMATION_ONE = "WARNING: This will permanently delete all locally stored pilot submissions and pilot logs for this browser. Continue?";
-const CLEAR_ALL_CONFIRMATION_TWO = "Final confirmation: Clear All Pilot Data now?";
+const CLEAR_ALL_CONFIRMATION_ONE = PILOT_MODE
+  ? "WARNING: This will permanently delete all locally stored pilot submissions and pilot logs for this browser. Continue?"
+  : "WARNING: This will permanently delete all locally stored submissions and logs for this browser. Continue?";
+const CLEAR_ALL_CONFIRMATION_TWO = PILOT_MODE
+  ? "Final confirmation: Clear All Pilot Data now?"
+  : "Final confirmation: Clear All Local Data now?";
 
 const state = {
   step: "name", // name | raffle | review | confirmation | adminExport
@@ -64,8 +68,8 @@ const EVENT_TIMELINE_ITEMS = [
     id: "timeline-kickoff",
     icon: "🎲",
     title: "Raffle Kickoff",
-    shortDate: "September 2",
-    date: "Wednesday, September 2",
+    shortDate: "September 9",
+    date: "Wednesday, September 9",
     details: "The Raffle Royale experience officially begins. Explore the prizes, learn how the raffle works, and start planning your strategy."
   },
   {
@@ -74,7 +78,7 @@ const EVENT_TIMELINE_ITEMS = [
     title: "Bidding Window",
     shortDate: "September 16-23",
     date: "Wednesday, September 16–Wednesday, September 23",
-    details: "You will receive 20 raffle tickets to distribute across the prizes you want most. Go all in on one prize or spread your tickets across several."
+    details: "You will receive 20 raffle chips to distribute across the prizes you want most. Go all in on one prize or spread your chips across several."
   },
   {
     id: "timeline-winners-announced",
@@ -94,8 +98,8 @@ const HOW_IT_WORKS_ITEMS = [
   },
   {
     stepLabel: "②",
-    title: "Spend Your 20 Tickets",
-    details: "Distribute all 20 tickets however you choose."
+    title: "Spend Your 20 Chips",
+    details: "Distribute all 20 chips however you choose."
   },
   {
     stepLabel: "③",
@@ -110,9 +114,9 @@ const HOW_IT_WORKS_ITEMS = [
 ];
 
 const IMPORTANT_RULES_ITEMS = [
-  "Tickets represent raffle entries, not money.",
-  "More tickets placed on a prize means more entries in that prize's drawing.",
-  "All 20 tickets must be allocated before submission.",
+  "Chips represent raffle entries, not money.",
+  "More chips placed on a prize means more entries in that prize's drawing.",
+  "All 20 chips must be allocated before submission.",
   "Once you win a prize, you will be removed from all remaining prize drawings, giving more participants a chance to win."
 ];
 
@@ -357,6 +361,42 @@ function getPilotBannerMarkup() {
   `;
 }
 
+function getEventPhaseLockedMessage(eventPhase = getEventPhase()) {
+  if (eventPhase === "preview") {
+    return "Token allocation unlocks September 16. Scope out the prizes and plan your strategy!";
+  }
+
+  if (eventPhase === "closed") {
+    return "Bidding is closed. The bets are in-winners will be announced at SuperTeam on October 6!";
+  }
+
+  return "";
+}
+
+function getEventPhaseBannerMarkup() {
+  const eventPhase = getEventPhase();
+
+  if (eventPhase === "preview") {
+    return `
+      <section class="phase-banner phase-banner--preview" aria-label="Preview mode notice">
+        <p class="phase-badge">🎲 Preview Mode</p>
+        <p class="phase-message">Scope out the prizes and plan your strategy-token allocation unlocks September 16!</p>
+      </section>
+    `;
+  }
+
+  if (eventPhase === "closed") {
+    return `
+      <section class="phase-banner phase-banner--closed" aria-label="Bidding closed notice">
+        <p class="phase-badge">🏆 Bidding Closed</p>
+        <p class="phase-message">The bets are in! Winners will be announced at the SuperTeam meeting on October 6.</p>
+      </section>
+    `;
+  }
+
+  return "";
+}
+
 function getTotalAllocated() {
   return Object.values(state.allocations).reduce((sum, count) => sum + count, 0);
 }
@@ -420,6 +460,10 @@ function getSelectedPrizeAllocations(allocations) {
       count: Number(allocations[prize.id] || 0)
     }))
     .filter((item) => item.count > 0);
+}
+
+function formatTicketCountLabel(count) {
+  return `${count} ${count === 1 ? "Chip" : "Chips"}`;
 }
 
 function applyTicketAction(allocations, action, prizeId) {
@@ -666,7 +710,7 @@ function isValidParticipantName(nameValue) {
 function getSubmissionFailureMessage(error) {
   const code = error?.code || "";
   if (code === "VALIDATION_ERROR") {
-    return "Your entry could not be submitted. Please review your name and ticket allocations, then try again.";
+    return "Your entry could not be submitted. Please review your name and chip allocations, then try again.";
   }
 
   const mode = SUBMISSION_CONFIG?.mode === "api" ? "api" : "local";
@@ -950,30 +994,71 @@ async function openAdminExportFlow(onInvalidCode) {
 
 function renderParticipantCompletedStep() {
   const completion = state.participantCompletion;
+  const savedSubmissions = getSavedSubmissions();
+  const savedSubmission = state.lastSubmission
+    || savedSubmissions.find((entry) => (entry.submissionId || entry.id || "") === (completion?.submissionId || ""))
+    || savedSubmissions.find((entry) => (entry.participantId || "") === (completion?.participantId || ""))
+    || null;
+  const totalSubmittedTickets = savedSubmission
+    ? PRIZES.reduce((sum, prize) => sum + getAllocationCount(savedSubmission, prize.id), 0)
+    : "";
+  const selectedPrizeCount = savedSubmission
+    ? PRIZES.filter((prize) => getAllocationCount(savedSubmission, prize.id) > 0).length
+    : "";
+  const savedParticipantName = completion?.participantName || getParticipantName(savedSubmission) || "";
   const submittedAtText = completion ? new Date(completion.submittedAt).toLocaleString() : "";
 
   appRoot.innerHTML = `
     <main class="app-shell" aria-live="polite">
-      <section class="confirmation">
-        <h1 class="confirmation-title">Entry Already Submitted</h1>
+      <section class="confirmation confirmation--success">
+        <img
+          class="confirmation-logo"
+          src="assets/images/raffle-royale-logo.png"
+          alt="Raffle Royale logo"
+          loading="eager"
+          decoding="async"
+          onerror="this.classList.add('is-hidden'); this.setAttribute('aria-hidden', 'true');"
+        />
+        <h1 class="confirmation-title">Your Chips Are In!</h1>
         ${getPilotBannerMarkup()}
-        <p class="app-subtitle">This browser has already submitted a ${escapeHtml(getModeLabel())} entry.</p>
+        <p class="app-subtitle">Your Raffle Royale entry has been submitted successfully.</p>
         ${state.notice ? `<p class="status-message">${escapeHtml(state.notice)}</p>` : ""}
+
+        <section class="submission-summary" aria-label="Submission summary">
+          <h2 class="submission-summary-title">Submission Summary</h2>
+          <div class="submission-summary-grid">
+            <article class="submission-summary-item">
+              <p class="submission-summary-label">Participant</p>
+              <p class="submission-summary-value">${escapeHtml(savedParticipantName)}</p>
+            </article>
+            <article class="submission-summary-item">
+              <p class="submission-summary-label">Total Chips Submitted</p>
+              <p class="submission-summary-value">${escapeHtml(String(totalSubmittedTickets))}</p>
+            </article>
+            <article class="submission-summary-item">
+              <p class="submission-summary-label">Selected Prizes</p>
+              <p class="submission-summary-value">${escapeHtml(String(selectedPrizeCount))}</p>
+            </article>
+          </div>
+          <p class="confirmation-win-note">Winners will be announced during the SuperTeam meeting on Tuesday, October 6.</p>
+        </section>
 
         <div class="confirmation-details" aria-label="Existing submission details">
           <p>Participant ID: <strong>${escapeHtml(completion?.participantId || state.participantId)}</strong></p>
-          <p>Name: <strong>${escapeHtml(completion?.participantName || "")}</strong></p>
+          <p>Name: <strong>${escapeHtml(savedParticipantName)}</strong></p>
           <p>Submission ID: <strong>${escapeHtml(completion?.submissionId || "")}</strong></p>
           <p>Submitted At: <strong>${escapeHtml(submittedAtText)}</strong></p>
           <p>Mode: <strong>${escapeHtml(getModeLabel())}</strong></p>
         </div>
 
-        <p class="confirmation-note">Reset This Browser for Testing is for pilot testing only and does not delete admin submission data.</p>
-
-        <div class="confirmation-actions">
-          <button class="secondary-btn" id="open-admin-from-lock-btn" type="button">Admin Export</button>
-          <button class="secondary-btn" id="reset-browser-btn" type="button">Reset This Browser for Testing</button>
-        </div>
+        <section class="confirmation-testing-panel" aria-label="${PILOT_MODE ? "Pilot testing tools" : "Account tools"}">
+          ${PILOT_MODE ? `<h2 class="confirmation-testing-title">Pilot Testing Tools</h2>
+          <p class="confirmation-note">Reset This Browser for Testing is for pilot testing only and does not delete admin submission data.</p>` : ""}
+          <div class="confirmation-actions">
+            <button class="secondary-btn" id="open-admin-from-lock-btn" type="button">Admin Export</button>
+            ${PILOT_MODE ? `<button class="secondary-btn" id="reset-browser-btn" type="button">Reset This Browser for Testing</button>` : ""}
+          </div>
+        </section>
       </section>
     </main>
   `;
@@ -985,18 +1070,21 @@ function renderParticipantCompletedStep() {
     });
   });
 
-  document.getElementById("reset-browser-btn").addEventListener("click", () => {
-    if (!confirmResetBrowserForTesting()) {
-      return;
-    }
+  const resetBrowserBtn = document.getElementById("reset-browser-btn");
+  if (resetBrowserBtn) {
+    resetBrowserBtn.addEventListener("click", () => {
+      if (!confirmResetBrowserForTesting()) {
+        return;
+      }
 
-    clearParticipantCompletionLock();
-    state.participantId = resetParticipantId();
-    resetEntryState();
-    setNotice("Browser reset for pilot testing. You can submit a new test entry.");
-    state.step = "name";
-    render();
-  });
+      clearParticipantCompletionLock();
+      state.participantId = resetParticipantId();
+      resetEntryState();
+      setNotice("Browser reset for pilot testing. You can submit a new test entry.");
+      state.step = "name";
+      render();
+    });
+  }
 }
 
 function renderNameStep(errorMessage = "") {
@@ -1016,7 +1104,7 @@ function renderNameStep(errorMessage = "") {
         </div>
         ${getPilotBannerMarkup()}
         <div class="participant-hero-intro" aria-label="Event introduction">
-          <p class="app-subtitle hero-intro">Choose how you'll spend your 20 raffle tickets.</p>
+          <p class="app-subtitle hero-intro">Choose how you'll spend your 20 raffle chips.</p>
           <p class="app-subtitle hero-intro hero-intro-secondary">Go all in on one prize, or spread your chances across several.</p>
         </div>
         <div class="hero-divider" aria-hidden="true"></div>
@@ -1079,9 +1167,11 @@ function renderNameStep(errorMessage = "") {
 }
 
 function renderRaffleStep() {
+  const eventPhase = getEventPhase();
+  const allocationsLocked = eventPhase !== "live";
   const remaining = getRemainingTickets();
   const totalAllocated = getTotalAllocated();
-  const readyForReview = remaining === 0;
+  const readyForReview = remaining === 0 && !allocationsLocked;
 
   const cardsMarkup = PRIZES.map((prize) => {
     const count = state.allocations[prize.id];
@@ -1120,29 +1210,35 @@ function renderRaffleStep() {
             >
               View Details
             </button>
+            ${allocationsLocked ? `
+            <div class="ticket-controls ticket-controls--locked" aria-label="Token allocation locked for ${escapeHtml(prize.name)}">
+              <span class="ticket-lock-badge">${eventPhase === "preview" ? "🔒 Opens Sept 16" : "🔒 Bidding Closed"}</span>
+            </div>
+            ` : `
             <div class="ticket-controls">
               <button
                 class="ticket-btn"
                 type="button"
                 data-action="decrement"
                 data-prize-id="${prize.id}"
-                aria-label="Remove ticket from ${escapeHtml(prize.name)}"
+                aria-label="Remove chip from ${escapeHtml(prize.name)}"
                 ${count === 0 ? "disabled" : ""}
               >
                 -
               </button>
-              <span class="ticket-count" aria-label="${count} tickets assigned">${count}</span>
+              <span class="ticket-count" aria-label="${count} chips assigned">${count}</span>
               <button
                 class="ticket-btn"
                 type="button"
                 data-action="increment"
                 data-prize-id="${prize.id}"
-                aria-label="Add ticket to ${escapeHtml(prize.name)}"
+                aria-label="Add chip to ${escapeHtml(prize.name)}"
                 ${remaining === 0 ? "disabled" : ""}
               >
                 +
               </button>
             </div>
+            `}
           </section>
 
           <section class="prize-face prize-face-back" aria-hidden="${isFlipped ? "false" : "true"}"${isFlipped ? "" : " inert"}>
@@ -1190,18 +1286,19 @@ function renderRaffleStep() {
           />
         </div>
         ${getPilotBannerMarkup()}
-        <p class="app-subtitle hero-intro">Allocate all ${TOTAL_TICKETS} tickets before continuing to review.</p>
-        <section class="ticket-summary" aria-label="Ticket summary">
+        ${getEventPhaseBannerMarkup()}
+        <p class="app-subtitle hero-intro">${allocationsLocked ? "Browse the prizes below and start planning your strategy." : `Allocate all ${TOTAL_TICKETS} chips before continuing to review.`}</p>
+        <section class="ticket-summary" aria-label="Chip summary">
           <article class="ticket-summary-item">
             <p class="ticket-summary-label">Player</p>
             <p class="ticket-summary-value">${escapeHtml(state.name)}</p>
           </article>
           <article class="ticket-summary-item">
-            <p class="ticket-summary-label">Tickets Allocated</p>
+            <p class="ticket-summary-label">Chips Allocated</p>
             <p class="ticket-summary-value">${totalAllocated} / ${TOTAL_TICKETS}</p>
           </article>
           <article class="ticket-summary-item">
-            <p class="ticket-summary-label">Tickets Remaining</p>
+            <p class="ticket-summary-label">Chips Remaining</p>
             <p class="ticket-summary-value ${readyForReview ? "is-complete" : ""}">${remaining}</p>
           </article>
         </section>
@@ -1212,7 +1309,7 @@ function renderRaffleStep() {
       <section class="event-info" aria-labelledby="event-info-heading">
         <div class="event-hype" aria-labelledby="event-info-heading">
           <h2 class="event-hype-title" id="event-info-heading">Welcome to Raffle Royale</h2>
-          <p class="event-hype-lead">Twenty tickets. Eleven prizes. One strategy. How will you play?</p>
+          <p class="event-hype-lead">Twenty chips. Eleven prizes. One strategy. How will you play?</p>
         </div>
 
         <section class="event-timeline" aria-label="Event timeline">
@@ -1230,7 +1327,7 @@ function renderRaffleStep() {
         </section>
       </section>
 
-      <section class="card-grid" aria-label="Prize ticket allocation cards">
+      <section class="card-grid" aria-label="Prize chip allocation cards">
         ${cardsMarkup}
       </section>
 
@@ -1239,7 +1336,7 @@ function renderRaffleStep() {
         <button class="primary-btn" id="review-btn" type="button" ${readyForReview ? "" : "disabled"}>Review Choices</button>
       </div>
       <p class="error-text" id="allocation-error">
-        ${readyForReview ? "" : `Allocate ${remaining} more ticket${remaining === 1 ? "" : "s"} to continue.`}
+        ${allocationsLocked ? escapeHtml(getEventPhaseLockedMessage(eventPhase)) : readyForReview ? "" : `Allocate ${remaining} more chip${remaining === 1 ? "" : "s"} to continue.`}
       </p>
     </main>
   `;
@@ -1410,7 +1507,7 @@ function renderRaffleStep() {
   }
 
   document.getElementById("review-btn").addEventListener("click", () => {
-    if (getTotalAllocated() !== TOTAL_TICKETS) {
+    if (allocationsLocked || getTotalAllocated() !== TOTAL_TICKETS) {
       return;
     }
 
@@ -1426,7 +1523,7 @@ function renderRaffleStep() {
 
   if (totalAllocated > TOTAL_TICKETS) {
     const overflow = totalAllocated - TOTAL_TICKETS;
-    document.getElementById("allocation-error").textContent = `Too many tickets assigned by ${overflow}. Reduce before continuing.`;
+    document.getElementById("allocation-error").textContent = `Too many chips assigned by ${overflow}. Reduce before continuing.`;
   }
 }
 
@@ -1435,32 +1532,89 @@ function renderReviewStep(errorMessage = "") {
   const isComplete = remaining === 0;
   const selectedPrizes = getSelectedPrizeAllocations(state.allocations);
   const failureMetaText = errorMessage ? getSubmissionFailureMetaText() : "";
+  const totalAllocated = getTotalAllocated();
+  const hasSubmissionError = Boolean(errorMessage);
 
   const allocationRows = selectedPrizes.length
-    ? selectedPrizes.map((item) => `<p>${escapeHtml(item.prize.name)}: <strong>${item.count}</strong></p>`).join("")
+    ? selectedPrizes.map((item) => `
+      <article class="review-prize-row" aria-label="${escapeHtml(item.prize.name)} allocation">
+        <img
+          class="review-prize-thumb"
+          src="${escapeHtml(item.prize.image)}"
+          alt="${escapeHtml(item.prize.imageAlt || item.prize.name)}"
+          loading="lazy"
+          decoding="async"
+        />
+        <div class="review-prize-content">
+          <p class="review-prize-name">${escapeHtml(item.prize.name)}</p>
+          <p class="review-prize-count"><span class="review-chip-badge"><span aria-hidden="true">🟡</span> ${escapeHtml(formatTicketCountLabel(item.count))}</span></p>
+        </div>
+      </article>
+    `).join("")
     : `<p class="confirmation-note">No prize entries selected yet.</p>`;
 
   appRoot.innerHTML = `
     <main class="app-shell" aria-live="polite">
-      <section class="confirmation">
-        <h1 class="confirmation-title">Review Entry</h1>
+      <section class="confirmation confirmation--review">
+        <img
+          class="confirmation-logo"
+          src="assets/images/raffle-royale-logo.png"
+          alt="Raffle Royale logo"
+          loading="eager"
+          decoding="async"
+          onerror="this.classList.add('is-hidden'); this.setAttribute('aria-hidden', 'true');"
+        />
+        <h1 class="confirmation-title">Review Your Entry</h1>
         ${getPilotBannerMarkup()}
-        <p class="app-subtitle">Confirm your name and ticket allocations before final submission.</p>
+        <p class="app-subtitle">Confirm your name and chip allocations before submitting.</p>
 
-        <div class="confirmation-details" aria-label="Review submission details">
-          <p>Name: <strong>${escapeHtml(state.name)}</strong></p>
-          <p>First Name: <strong>${escapeHtml(parseParticipantName(state.name).firstName)}</strong></p>
-          <p>Last Initial: <strong>${escapeHtml(parseParticipantName(state.name).lastInitial)}</strong></p>
-          <p>Total Tickets Allocated: <strong>${getTotalAllocated()}</strong></p>
-          ${allocationRows}
+        <section class="submission-summary" aria-label="Review summary">
+          <h2 class="submission-summary-title">Entry Summary</h2>
+          <div class="submission-summary-grid">
+            <article class="submission-summary-item">
+              <p class="submission-summary-label">Participant</p>
+              <p class="submission-summary-value">${escapeHtml(state.name)}</p>
+            </article>
+            <article class="submission-summary-item">
+              <p class="submission-summary-label">Total Chips</p>
+              <p class="submission-summary-value">${totalAllocated} / ${TOTAL_TICKETS}</p>
+            </article>
+            <article class="submission-summary-item">
+              <p class="submission-summary-label">Selected Prizes</p>
+              <p class="submission-summary-value">${selectedPrizes.length}</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="confirmation-details review-selected-prizes" aria-label="Selected prizes">
+          <h2 class="review-section-title">YOUR CHIP ALLOCATIONS</h2>
+          <p class="review-section-subtitle">Review where your ${TOTAL_TICKETS} chips will be entered.</p>
+          <div class="review-prize-list">
+            ${allocationRows}
+          </div>
+        </section>
+
+        ${hasSubmissionError ? `
+          <section class="submission-error-panel" role="alert" aria-label="Submission error">
+            <h2 class="submission-error-title">We Couldn't Submit Your Entry</h2>
+            <p class="submission-error-copy">Your chip allocations are safe. Nothing has been lost.</p>
+            <div class="submission-error-tech" aria-label="Technical details">
+              <p class="error-text">${escapeHtml(errorMessage)}</p>
+              ${failureMetaText ? `<p class="confirmation-note">${escapeHtml(failureMetaText)}</p>` : ""}
+            </div>
+          </section>
+        ` : ""}
+
+        ${!hasSubmissionError ? `<p class="error-text">${escapeHtml(isComplete ? "" : `Allocate ${remaining} more chips before submitting.`)}</p>` : ""}
+
+        <div class="review-action-copy" aria-label="Submission guidance">
+          <p class="review-action-prompt">Ready to lock in your chip allocations?</p>
+          <p class="review-action-note">Once submitted, your chip allocations cannot be changed.</p>
         </div>
 
-        <p class="error-text">${escapeHtml(errorMessage || (isComplete ? "" : `Allocate ${remaining} more tickets before submitting.`))}</p>
-        ${failureMetaText ? `<p class="confirmation-note">${escapeHtml(failureMetaText)}</p>` : ""}
-
-        <div class="confirmation-actions">
+        <div class="confirmation-actions review-action-bar">
           <button class="secondary-btn" id="edit-allocation-btn" type="button">Edit Allocation</button>
-          <button class="primary-btn" id="final-submit-btn" type="button" ${isComplete && !state.isSubmitting ? "" : "disabled"}>${state.isSubmitting ? "Submitting..." : "Submit Entry"}</button>
+          <button class="primary-btn ${state.isSubmitting ? "is-loading" : ""}" id="final-submit-btn" type="button" ${isComplete && !state.isSubmitting ? "" : "disabled"}>${state.isSubmitting ? "Submitting Your Entry…" : "Submit Entry"}</button>
         </div>
       </section>
     </main>
@@ -1472,13 +1626,20 @@ function renderReviewStep(errorMessage = "") {
   });
 
   document.getElementById("final-submit-btn").addEventListener("click", async () => {
+    if (!isAllocationWindowOpen()) {
+      state.step = "raffle";
+      setNotice(getEventPhaseLockedMessage());
+      render();
+      return;
+    }
+
     if (!beginSubmissionAttempt()) {
       return;
     }
 
     if (getTotalAllocated() !== TOTAL_TICKETS) {
       finishSubmissionAttempt();
-      renderReviewStep("All tickets must be allocated before submitting.");
+      renderReviewStep("All chips must be allocated before submitting.");
       return;
     }
 
@@ -1534,7 +1695,7 @@ function renderConfirmationStep() {
       <section class="confirmation">
         <h1 class="confirmation-title">Entry Submitted</h1>
         ${getPilotBannerMarkup()}
-        <p class="app-subtitle">Thanks, ${escapeHtml(submittedName)}. Your raffle tickets were recorded.</p>
+        <p class="app-subtitle">Thanks, ${escapeHtml(submittedName)}. Your raffle chips were recorded.</p>
         ${state.notice ? `<p class="status-message">${escapeHtml(state.notice)}</p>` : ""}
 
         <div class="confirmation-details" aria-label="Submitted allocation summary">
@@ -1692,7 +1853,7 @@ function renderAdminExportStep() {
             <button class="secondary-btn" id="copy-admin-csv-btn" type="button">Copy Standard CSV</button>
             <button class="secondary-btn" id="download-admin-csv-btn" type="button">Download Standard CSV</button>
             <button class="secondary-btn" id="download-ticket-pool-csv-btn" type="button">Download Ticket Pool CSV</button>
-            <button class="secondary-btn" id="clear-test-data-btn" type="button">Clear All Pilot Data</button>
+            <button class="secondary-btn" id="clear-test-data-btn" type="button">${PILOT_MODE ? "Clear All Pilot Data" : "Clear All Local Data"}</button>
           </div>
         </section>
 
@@ -1789,7 +1950,7 @@ function renderAdminExportStep() {
     resetEntryState();
     state.lastApiHealthCheck = null;
     state.apiHealthHistory = [];
-    setNotice("All pilot data cleared.");
+    setNotice(PILOT_MODE ? "All pilot data cleared." : "All local data cleared.");
     renderAdminExportStep();
   });
 
@@ -1880,6 +2041,9 @@ window.RaffleRoyaleAppTestHooks = {
   confirmClearAllPilotData,
   beginSubmissionAttempt,
   finishSubmissionAttempt,
+  getEventPhase,
+  isAllocationWindowOpen,
+  getEventPhaseLockedMessage,
   getIsSubmitting: () => state.isSubmitting,
   getParticipantId: () => state.participantId,
   setParticipantIdForTests: (id) => {

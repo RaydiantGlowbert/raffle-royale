@@ -1,5 +1,6 @@
 import { getSqlClient } from "./_db.js";
 import { getAllowedPrizeIds, normalizeAndValidateAllocations } from "./_prizeValidation.js";
+import { getEventPhase } from "./_eventWindow.js";
 
 const NAME_FORMAT = /^[A-Za-z]+(?:[\-'][A-Za-z]+)?\s+[A-Za-z]\.?$/;
 const ALLOWED_MODES = new Set(["pilot", "live"]);
@@ -75,6 +76,19 @@ function parseRequestBody(body, allowedPrizeIds) {
 }
 
 export async function POST(request) {
+  const eventPhase = getEventPhase();
+  if (eventPhase !== "live") {
+    const message = eventPhase === "preview"
+      ? "Token allocation opens September 16, 2026."
+      : "Bidding closed September 23, 2026. Winners will be announced at SuperTeam on October 6.";
+
+    return jsonResponse(403, {
+      ok: false,
+      code: "RAFFLE_NOT_LIVE",
+      message
+    });
+  }
+
   const sql = getSqlClient();
   if (!sql) {
     return jsonResponse(500, {

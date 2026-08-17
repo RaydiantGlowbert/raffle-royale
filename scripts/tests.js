@@ -66,9 +66,23 @@
       };
     }
 
-    test("Pilot mode configuration is active", function () {
-      assert(appHooks.PILOT_MODE === true, "PILOT_MODE should be true for pilot testing");
-      assert(appHooks.APP_MODE === "pilot", "APP_MODE should be pilot");
+    test("App mode configuration is consistent", function () {
+      assert(typeof appHooks.PILOT_MODE === "boolean", "PILOT_MODE should be a boolean");
+      assert(appHooks.APP_MODE === (appHooks.PILOT_MODE ? "pilot" : "live"), "APP_MODE should match PILOT_MODE");
+    });
+
+    test("Event phase resolves preview, live, and closed windows (Eastern Time)", function () {
+      assert(appHooks.getEventPhase(new Date("2026-08-17T12:00:00-04:00")) === "preview", "Before Sept 16 should be preview");
+      assert(appHooks.getEventPhase(new Date("2026-09-15T23:59:59-04:00")) === "preview", "Sept 15 11:59:59pm ET should be preview");
+      assert(appHooks.getEventPhase(new Date("2026-09-16T00:00:00-04:00")) === "live", "Sept 16 midnight ET should be live");
+      assert(appHooks.getEventPhase(new Date("2026-09-20T12:00:00-04:00")) === "live", "Sept 20 should be live");
+      assert(appHooks.getEventPhase(new Date("2026-09-23T23:59:59-04:00")) === "live", "Sept 23 11:59:59pm ET should still be live");
+      assert(appHooks.getEventPhase(new Date("2026-09-24T00:00:00-04:00")) === "closed", "Sept 24 midnight ET should be closed");
+      assert(appHooks.getEventPhase(new Date("2026-10-01T12:00:00-04:00")) === "closed", "After Sept 23 should be closed");
+
+      assert(appHooks.isAllocationWindowOpen(new Date("2026-09-20T12:00:00-04:00")) === true, "isAllocationWindowOpen should be true during live window");
+      assert(appHooks.isAllocationWindowOpen(new Date("2026-09-10T12:00:00-04:00")) === false, "isAllocationWindowOpen should be false during preview");
+      assert(appHooks.isAllocationWindowOpen(new Date("2026-10-01T12:00:00-04:00")) === false, "isAllocationWindowOpen should be false after closing");
     });
 
     test("Participant ID persists across reads until reset", function () {

@@ -1,7 +1,6 @@
-# Raffle Royale - Pilot Mode
+# Raffle Royale
 
-Raffle Royale is currently configured for pilot testing.
-The app keeps the same participant flow while adding stronger local safeguards and richer admin exports for manual winner drawing.
+Raffle Royale is live. Mentors enter their name, allocate 20 chips across active prize categories, and submit their entry for organizers to draw winners from.
 
 ## Pilot Mode on or off
 
@@ -9,13 +8,15 @@ Pilot Mode is controlled in one place:
 
 - scripts/data.js
 - Set PILOT_MODE to true for pilot testing
-- Set PILOT_MODE to false to remove pilot labeling
+- Set PILOT_MODE to false for the live event (current setting)
 
 Derived app mode value:
 
-- APP_MODE is automatically set to pilot when PILOT_MODE is true
+- APP_MODE is automatically set to pilot when PILOT_MODE is true, otherwise live
 
-## What Pilot Mode adds
+When PILOT_MODE is false, the pilot banner, "Pilot Testing Tools" panel, and "Reset This Browser for Testing" action are hidden so live participants cannot bypass the one-entry-per-browser lock. The admin "Clear All Pilot Data" action is relabeled "Clear All Local Data".
+
+## What Pilot Mode adds (when enabled for testing)
 
 - Visible Pilot Test label and test-only message in participant and admin screens
 - Mode field saved with every submission
@@ -46,7 +47,7 @@ Duplicate prevention behavior:
 - After success, browser stores submission-completed status.
 - Returning to the site on the same browser shows the existing confirmation state.
 
-Reset one browser for pilot testing:
+Reset one browser for pilot testing (only available when PILOT_MODE is true):
 
 - On the locked confirmation screen, click Reset This Browser for Testing.
 - Two confirmation warnings are required.
@@ -61,7 +62,7 @@ Reset one browser for pilot testing:
 
 Dashboard includes:
 
-- Pilot Mode status
+- Current app mode (pilot or live)
 - Total submissions
 - Total tickets entered
 - Total tickets by prize
@@ -72,8 +73,8 @@ Admin data source behavior:
 
 - Shared Neon submissions are the default and authoritative source.
 - If organizer session is missing/expired, admin retrieval returns 401 and requires sign-in again.
-- If shared retrieval is unavailable, admin screen shows an error and offers Use Local Pilot Data for troubleshooting only.
-- Local pilot data is browser-specific and may be incomplete.
+- If shared retrieval is unavailable, admin screen shows an error and offers Use Local Data for troubleshooting only.
+- Local data is browser-specific and may be incomplete.
 
 ## CSV exports
 
@@ -108,14 +109,14 @@ For each prize:
 
 This gives each ticket equal chance and naturally weights participants by ticket count.
 
-## Clear all pilot data
+## Clear all local data
 
-Admin dashboard action: Clear All Pilot Data
+Admin dashboard action: Clear All Pilot Data (pilot mode) / Clear All Local Data (live mode)
 
 Behavior:
 
 - Requires two confirmations
-- Deletes all locally stored pilot submissions and pilot logs for this browser
+- Deletes all locally stored submissions and logs for this browser (troubleshooting fallback only; does not touch the shared Neon database)
 - Resets browser participant identity and completion lock
 
 ## Local storage details
@@ -127,17 +128,10 @@ Local storage keys used:
 - raffleRoyaleParticipantId
 - raffleRoyaleParticipantCompletion
 
-## Limitations in pilot mode
+## Limitations
 
-- Data is local to one browser profile on one device
-- Different devices do not automatically combine entries
-- Clearing browser storage removes local data
-- No centralized live dashboard across multiple devices yet
-
-## Recommended next phase after successful pilot
-
-Add a small backend submission API that keeps the same submitEntry contract and writes to a shared data store (for example Microsoft Lists) using server-side credentials only.
-Do not put credentials in frontend JavaScript.
+- The "Use Local Data" admin fallback is local to one browser profile on one device and is for troubleshooting only
+- Clearing browser storage removes that browser's local fallback data (not the shared Neon database)
 
 ## Phase 1 Database Setup (Neon + Vercel)
 
@@ -175,7 +169,7 @@ Add these in Vercel Project Settings -> Environment Variables:
 - ORGANIZER_ACCESS_CODE: Organizer-only sign-in code checked by POST /api/admin/session
 - ORGANIZER_SESSION_SECRET: Long random secret used to sign organizer session cookie
 - ORGANIZER_SESSION_TTL_SECONDS: Optional session lifetime in seconds (default is 7200)
-- RAFFLE_EVENT_ID: Event filter for shared admin retrieval (defaults to raffle-royale-2026-final-pilot)
+- RAFFLE_EVENT_ID: Event filter for shared admin retrieval (defaults to raffle-royale-2026, matching scripts/data.js SUBMISSION_CONFIG.eventId)
 - RAFFLE_PRIZE_IDS: Optional comma-separated allow-list override for server validation. If omitted, server defaults to active final-pilot prizes:
   royal-flush-retreat,vegas-main-character,high-roller-time-bank,mentor-mvp-pack,double-down-development,brew-crew-casey,good-fortune-giveaway,wise-mentor-collection,casino-royale-collection,purr-fect-companion-pack,top-dog-pack
 
@@ -225,7 +219,7 @@ Rollback guidance for additive stage:
 ## Final-prize pilot activation checklist
 
 1. In Neon SQL Editor, run sql/003_relax_legacy_p1_p5_constraints.sql.
-2. In Vercel Project Settings -> Environment Variables, set RAFFLE_EVENT_ID=raffle-royale-2026-final-pilot for each target environment.
+2. RAFFLE_EVENT_ID is optional; only set it if scripts/data.js SUBMISSION_CONFIG.eventId changes from the raffle-royale-2026 default.
 3. Set RAFFLE_PRIZE_IDS to the active final-pilot IDs (comma-separated):
   royal-flush-retreat,vegas-main-character,high-roller-time-bank,mentor-mvp-pack,double-down-development,brew-crew-casey,good-fortune-giveaway,wise-mentor-collection,casino-royale-collection,purr-fect-companion-pack,top-dog-pack
 4. Confirm presidents-pick is intentionally excluded from RAFFLE_PRIZE_IDS during pilot.

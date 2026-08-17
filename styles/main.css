@@ -197,6 +197,61 @@ body {
   font-size: 0.8rem;
 }
 
+.phase-banner {
+  display: grid;
+  gap: 0.02rem;
+  justify-items: center;
+  margin: 0;
+  width: min(640px, 100%);
+  padding: 0.32rem 0.85rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(247, 190, 75, 0.4);
+  background: linear-gradient(180deg, rgba(46, 34, 16, 0.8), rgba(36, 29, 18, 0.65));
+}
+
+.phase-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: #3e2105;
+  background: linear-gradient(180deg, var(--accent-gold), var(--accent-gold-deep));
+}
+
+.phase-banner--closed .phase-badge {
+  background: linear-gradient(180deg, var(--success), #4fae5c);
+  color: #0f2b12;
+}
+
+.phase-message {
+  color: #f5e8cd;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.ticket-controls--locked {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ticket-lock-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.32rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(247, 190, 75, 0.3);
+}
+
 .ticket-summary {
   width: min(760px, 100%);
   display: grid;
@@ -1111,10 +1166,315 @@ body {
   text-align: center;
 }
 
+.confirmation-logo {
+  width: min(250px, 100%);
+  margin: 0 auto var(--space-2);
+}
+
+.confirmation .pilot-banner {
+  margin: 0 auto var(--space-3);
+  max-width: 620px;
+  padding: 0.5rem 0.72rem;
+}
+
 .confirmation-title {
   font-family: Impact, "Arial Narrow Bold", sans-serif;
   color: var(--accent-gold);
   font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+.confirmation--review,
+.confirmation--success {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.submission-summary {
+  text-align: left;
+  display: grid;
+  gap: var(--space-2);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.submission-summary-title,
+.review-section-title,
+.submission-error-title,
+.confirmation-testing-title {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.submission-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.submission-summary-item {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  padding: var(--space-3);
+  display: grid;
+  gap: 0.2rem;
+}
+
+.submission-summary-label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.submission-summary-value {
+  font-weight: 700;
+  font-size: 1.05rem;
+  word-break: break-word;
+}
+
+.review-selected-prizes {
+  margin-bottom: var(--space-2);
+}
+
+.review-prize-list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.review-prize-row {
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.56rem;
+  padding: 0.14rem 1rem;
+  border: 1px solid rgba(247, 190, 75, 0.36);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(25, 18, 8, 0.95), rgba(18, 13, 6, 0.95));
+  box-shadow:
+    0 0 0 1px rgba(247, 190, 75, 0.08) inset,
+    0 7px 16px rgba(0, 0, 0, 0.2);
+  min-height: 42px;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.review-prize-row:hover {
+  transform: translateY(-1px);
+  border-color: rgba(247, 190, 75, 0.52);
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.26),
+    0 0 0 1px rgba(247, 190, 75, 0.18) inset,
+    0 0 14px rgba(247, 190, 75, 0.16);
+}
+
+.review-prize-thumb {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.review-prize-content {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.review-prize-name {
+  font-weight: 700;
+  line-height: 1.2;
+  font-size: 0.95rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.review-prize-count {
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
+.review-chip-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.11rem 0.54rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #2f1d06;
+  border: 1px solid rgba(255, 214, 132, 0.8);
+  background: linear-gradient(180deg, #ffd979, #f7be4b);
+  box-shadow:
+    0 0 0 1px rgba(255, 247, 220, 0.28) inset,
+    0 2px 8px rgba(247, 190, 75, 0.28);
+}
+
+.review-section-subtitle {
+  margin-top: 0.12rem;
+  margin-bottom: 0.42rem;
+  color: rgba(236, 236, 230, 0.72);
+  font-size: 0.88rem;
+}
+
+.submission-error-panel {
+  text-align: left;
+  border: 1px solid rgba(255, 109, 120, 0.45);
+  background: rgba(92, 26, 35, 0.45);
+  border-radius: var(--radius-md);
+  padding: 0.72rem 0.8rem;
+  margin-bottom: var(--space-2);
+}
+
+.submission-error-copy {
+  color: var(--text-secondary);
+  margin-top: 0.16rem;
+}
+
+.submission-error-tech {
+  margin-top: 0.58rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  padding-top: 0.42rem;
+}
+
+.submission-error-tech .error-text {
+  margin-top: 0;
+  font-size: 0.86rem;
+  color: rgba(255, 226, 226, 0.86);
+  font-weight: 500;
+}
+
+.submission-error-tech .confirmation-note {
+  font-size: 0.8rem;
+  color: rgba(236, 236, 230, 0.72);
+  margin-top: 0.2rem;
+}
+
+.review-action-bar {
+  margin-top: 0.18rem;
+  padding: 0.52rem;
+  border-radius: var(--radius-md);
+  background: rgba(0, 0, 0, 0.17);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.review-action-copy {
+  text-align: center;
+  margin-top: 0.22rem;
+  margin-bottom: 0.3rem;
+}
+
+.review-action-prompt {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.review-action-note {
+  margin-top: 0.14rem;
+  font-size: 0.84rem;
+  color: rgba(236, 236, 230, 0.74);
+}
+
+.confirmation-actions .primary-btn {
+  min-width: 210px;
+}
+
+.confirmation-actions .primary-btn.is-loading {
+  position: relative;
+  padding-right: 2.4rem;
+}
+
+.confirmation-actions .primary-btn.is-loading::after {
+  content: "";
+  position: absolute;
+  right: 0.88rem;
+  top: 50%;
+  width: 0.95rem;
+  height: 0.95rem;
+  margin-top: -0.475rem;
+  border-radius: 50%;
+  border: 2px solid rgba(58, 34, 6, 0.35);
+  border-top-color: #3a2206;
+  animation: submit-spin 0.95s linear infinite;
+}
+
+.confirmation--success {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(100% 120% at 20% -10%, rgba(247, 190, 75, 0.16), transparent 60%),
+    radial-gradient(100% 120% at 88% 0%, rgba(247, 190, 75, 0.13), transparent 62%);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 0 0 1px rgba(247, 190, 75, 0.24) inset,
+    0 14px 40px rgba(0, 0, 0, 0.28),
+    0 0 26px rgba(247, 190, 75, 0.16);
+  padding: var(--space-5);
+}
+
+.confirmation--success::before,
+.confirmation--success::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: 999px;
+  z-index: -1;
+}
+
+.confirmation--success::before {
+  width: 220px;
+  height: 220px;
+  top: -60px;
+  right: -40px;
+  background: radial-gradient(circle, rgba(247, 190, 75, 0.2), transparent 70%);
+}
+
+.confirmation--success::after {
+  width: 260px;
+  height: 260px;
+  left: -70px;
+  bottom: -85px;
+  background: radial-gradient(circle, rgba(247, 190, 75, 0.14), transparent 72%);
+}
+
+.confirmation-win-note {
+  margin-top: var(--space-2);
+  border-left: 3px solid rgba(247, 190, 75, 0.66);
+  padding-left: var(--space-2);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.confirmation-testing-panel {
+  text-align: left;
+  margin-top: var(--space-4);
+  border: 1px dashed rgba(255, 255, 255, 0.24);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.04);
+  padding: var(--space-3);
+  display: grid;
+  gap: var(--space-2);
+}
+
+@keyframes submit-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .confirmation-details {
@@ -1125,6 +1485,12 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-md);
   padding: var(--space-4);
+}
+
+.confirmation-details p,
+.confirmation-details strong {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .confirmation-note {
@@ -1233,7 +1599,7 @@ body {
 .confirmation-actions {
   display: flex;
   justify-content: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   flex-wrap: wrap;
 }
 
@@ -1285,12 +1651,24 @@ body {
     z-index: 1;
   }
 
+  .event-detail-panel[aria-hidden="true"] {
+    display: none;
+  }
+
   .card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .prize-card {
     min-height: 30rem;
+  }
+
+  .confirmation--success {
+    padding: var(--space-4);
+  }
+
+  .submission-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1404,6 +1782,44 @@ body {
   .raffle-header {
     align-items: flex-start;
   }
+
+  .confirmation-logo {
+    width: min(210px, 100%);
+  }
+
+  .submission-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .review-prize-row {
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 0.44rem;
+    min-height: 38px;
+    padding: 0.12rem 0.72rem;
+  }
+
+  .review-prize-thumb {
+    width: 42px;
+    height: 42px;
+  }
+
+  .review-prize-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.18rem;
+  }
+
+  .review-prize-name {
+    font-size: 0.88rem;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  .review-chip-badge {
+    padding: 0.1rem 0.42rem;
+    font-size: 0.68rem;
+  }
 }
 
 @media (max-width: 420px) {
@@ -1420,6 +1836,14 @@ body {
   .confirmation-actions .secondary-btn,
   .confirmation-actions .primary-btn {
     width: 100%;
+  }
+
+  .confirmation-actions .primary-btn {
+    min-width: 0;
+  }
+
+  .review-action-bar {
+    padding: 0.42rem;
   }
 
   .submit-wrap {
@@ -1444,6 +1868,14 @@ body {
   }
 
   .rules-callout-chevron {
+    transition: none;
+  }
+
+  .confirmation-actions .primary-btn.is-loading::after {
+    animation: none;
+  }
+
+  .review-prize-row {
     transition: none;
   }
 

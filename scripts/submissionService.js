@@ -16,10 +16,8 @@ const SubmissionService = {
       if (SUBMISSION_CONFIG?.mirrorLocalStorageOnSuccess) {
         saveSubmission(normalizedEntry);
       }
-      console.log("[SubmissionService] Saved entry (database)", normalizedEntry);
     } else {
       saveSubmission(normalizedEntry);
-      console.log("[SubmissionService] Saved entry (local)", normalizedEntry);
     }
 
     return {
