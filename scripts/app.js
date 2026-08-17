@@ -93,23 +93,18 @@ const EVENT_TIMELINE_ITEMS = [
 const HOW_IT_WORKS_ITEMS = [
   {
     stepLabel: "①",
-    title: "Explore the Prizes",
+    title: "Browse the Prizes",
     details: "Review each prize and select View Details to see exactly what is included."
   },
   {
     stepLabel: "②",
-    title: "Spend Your 20 Chips",
-    details: "Distribute all 20 chips however you choose."
+    title: "Bet Your Chips",
+    details: "Distribute all 20 chips across the prizes you want most."
   },
   {
     stepLabel: "③",
     title: "Review and Submit",
     details: "Confirm your selections and submit one final entry during the bidding window."
-  },
-  {
-    stepLabel: "④",
-    title: "Watch for the Winners",
-    details: "Winners will be announced during the SuperTeam meeting on Tuesday, October 6."
   }
 ];
 
@@ -380,7 +375,7 @@ function getEventPhaseBannerMarkup() {
     return `
       <section class="phase-banner phase-banner--preview" aria-label="Preview mode notice">
         <p class="phase-badge">🎲 Preview Mode</p>
-        <p class="phase-message">Scope out the prizes and plan your strategy-token allocation unlocks September 16!</p>
+        <p class="phase-message">Explore the prizes and plan your strategy. Your 20 chips unlock September 16!</p>
       </section>
     `;
   }
@@ -1196,9 +1191,9 @@ function renderRaffleStep() {
                   decoding="async"
                   onerror="this.classList.add('is-hidden'); this.setAttribute('aria-hidden', 'true');"
                 />
+                <span class="winner-count" aria-label="${Number(prize.winnerCount || 0)} ${Number(prize.winnerCount || 0) === 1 ? "winner" : "winners"}">${Number(prize.winnerCount || 0)} ${Number(prize.winnerCount || 0) === 1 ? "Winner" : "Winners"}</span>
               </div>
               <h2 class="prize-name">${escapeHtml(prize.name)}</h2>
-              <p class="winner-count" aria-label="${Number(prize.winnerCount || 0)} winners">${Number(prize.winnerCount || 0)} Winners</p>
               <p class="prize-teaser">${teaserText}</p>
             </div>
             <button
@@ -1288,19 +1283,26 @@ function renderRaffleStep() {
         ${getPilotBannerMarkup()}
         ${getEventPhaseBannerMarkup()}
         <p class="app-subtitle hero-intro">${allocationsLocked ? "Browse the prizes below and start planning your strategy." : `Allocate all ${TOTAL_TICKETS} chips before continuing to review.`}</p>
-        <section class="ticket-summary" aria-label="Chip summary">
-          <article class="ticket-summary-item">
-            <p class="ticket-summary-label">Player</p>
-            <p class="ticket-summary-value">${escapeHtml(state.name)}</p>
-          </article>
-          <article class="ticket-summary-item">
-            <p class="ticket-summary-label">Chips Allocated</p>
-            <p class="ticket-summary-value">${totalAllocated} / ${TOTAL_TICKETS}</p>
-          </article>
-          <article class="ticket-summary-item">
-            <p class="ticket-summary-label">Chips Remaining</p>
-            <p class="ticket-summary-value ${readyForReview ? "is-complete" : ""}">${remaining}</p>
-          </article>
+        <section class="ticket-summary chip-dashboard" aria-label="Chip summary">
+          <div class="chip-dashboard-stats">
+            <article class="ticket-summary-item">
+              <p class="ticket-summary-label">Player</p>
+              <p class="ticket-summary-value">${escapeHtml(state.name)}</p>
+            </article>
+            <article class="ticket-summary-item">
+              <p class="ticket-summary-label">Chips Allocated</p>
+              <p class="ticket-summary-value">${totalAllocated} / ${TOTAL_TICKETS}</p>
+            </article>
+            <article class="ticket-summary-item">
+              <p class="ticket-summary-label">Chips Remaining</p>
+              <p class="ticket-summary-value ${readyForReview ? "is-complete" : ""}">${remaining}</p>
+            </article>
+          </div>
+          <div class="chip-progress" role="progressbar" aria-label="Chips allocated" aria-valuemin="0" aria-valuemax="${TOTAL_TICKETS}" aria-valuenow="${totalAllocated}">
+            <div class="chip-progress-track">
+              <div class="chip-progress-fill ${totalAllocated >= TOTAL_TICKETS ? "is-complete" : ""}" style="width: ${Math.min(100, Math.round((totalAllocated / TOTAL_TICKETS) * 100))}%"></div>
+            </div>
+          </div>
         </section>
         <div class="hero-divider" aria-hidden="true"></div>
       </header>
@@ -1312,6 +1314,9 @@ function renderRaffleStep() {
           <p class="event-hype-lead">Twenty chips. Eleven prizes. One strategy. How will you play?</p>
         </div>
 
+        <div class="timeline-heading-row">
+          <h2 class="timeline-heading">🛣️ Road to the Drawing</h2>
+        </div>
         <section class="event-timeline" aria-label="Event timeline">
           ${timelineMarkup}
         </section>
@@ -1325,6 +1330,17 @@ function renderRaffleStep() {
             ${rulesMarkup}
           </div>
         </section>
+      </section>
+
+      <section class="prize-intro" aria-label="Prize introduction">
+        <div class="prize-intro-divider" aria-hidden="true">
+          <span class="suit suit-spade">♠</span>
+          <span class="suit suit-heart">♥</span>
+          <span class="suit suit-diamond">♦</span>
+          <span class="suit suit-club">♣</span>
+        </div>
+        <h2 class="prize-intro-title">👑 Meet the Prizes</h2>
+        <p class="prize-intro-lead">Eleven ways to play. How will you spend your 20 chips?</p>
       </section>
 
       <section class="card-grid" aria-label="Prize chip allocation cards">
