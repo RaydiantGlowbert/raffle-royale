@@ -2,7 +2,7 @@ import { getSqlClient } from "./_db.js";
 import { getAllowedPrizeIds, normalizeAndValidateAllocations } from "./_prizeValidation.js";
 import { getEventPhase } from "./_eventWindow.js";
 
-const NAME_FORMAT = /^[A-Za-z]+(?:[\-'][A-Za-z]+)?\s+[A-Za-z]\.?$/;
+const NAME_FORMAT = /^[A-Za-z]+(?:[\-'][A-Za-z]+)?\s+[A-Za-z]+(?:[\-'][A-Za-z]+)?\.?$/;
 const ALLOWED_MODES = new Set(["pilot", "live"]);
 const EXPECTED_TOTAL_TICKETS = 20;
 

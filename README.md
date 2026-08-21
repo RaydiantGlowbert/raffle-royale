@@ -30,7 +30,7 @@ When PILOT_MODE is false, the pilot banner, "Pilot Testing Tools" panel, and "Re
 ## Run locally
 
 1. Open index.html in a browser.
-2. Enter participant name as First Name + Last Initial (example: Jamie T).
+2. Enter participant name as First Name + Last Initial (example: Jamie T), or First Name + Last Name if you share initials with another participant (example: Jamie Torres).
 3. Allocate all 20 tickets across the active prize cards.
 4. Review and submit.
 

@@ -98,10 +98,10 @@
       assert(one.submissionId !== two.submissionId, "submission IDs should be unique");
     });
 
-    test("Name validation accepts first + last initial", function () {
-      assert(appHooks.isValidParticipantName("Taylor M"), "Expected valid name to pass");
-      assert(!appHooks.isValidParticipantName("Taylor Morgan"), "Expected full last name to fail");
-      assert(!appHooks.isValidParticipantName("Taylor"), "Expected missing initial to fail");
+    test("Name validation accepts first + last initial or first + last name", function () {
+      assert(appHooks.isValidParticipantName("Taylor M"), "Expected valid initial format to pass");
+      assert(appHooks.isValidParticipantName("Taylor Morgan"), "Expected full last name to pass");
+      assert(!appHooks.isValidParticipantName("Taylor"), "Expected missing last name/initial to fail");
     });
 
     test("Ticket allocation cannot exceed total and cannot go below zero", function () {

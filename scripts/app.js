@@ -1,4 +1,4 @@
-const NAME_FORMAT = /^[A-Za-z]+(?:[\-'][A-Za-z]+)?\s+[A-Za-z]\.?$/;
+const NAME_FORMAT = /^[A-Za-z]+(?:[\-'][A-Za-z]+)?\s+[A-Za-z]+(?:[\-'][A-Za-z]+)?\.?$/;
 const RESET_BROWSER_CONFIRMATION_ONE = "Pilot testing only: this will clear this browser's submission-completed status and assign a new participant ID. Continue?";
 const RESET_BROWSER_CONFIRMATION_TWO = "Confirm browser reset for pilot testing. Admin submissions will remain intact.";
 const CLEAR_ALL_CONFIRMATION_ONE = PILOT_MODE
@@ -410,10 +410,12 @@ function getParticipantName(entry) {
 
 function parseParticipantName(nameValue) {
   const trimmed = String(nameValue || "").trim().replace(/\s+/g, " ");
-  const [firstName = "", lastInitialRaw = ""] = trimmed.split(" ");
-  const lastInitial = String(lastInitialRaw || "").replace(/\./g, "").charAt(0).toUpperCase();
+  const spaceIndex = trimmed.indexOf(" ");
+  const firstName = spaceIndex === -1 ? trimmed : trimmed.slice(0, spaceIndex);
+  const lastRaw = spaceIndex === -1 ? "" : trimmed.slice(spaceIndex + 1).trim().replace(/\.$/, "");
+  const lastInitial = lastRaw.charAt(0).toUpperCase();
   return {
-    participantName: `${firstName} ${lastInitial}`.trim(),
+    participantName: `${firstName} ${lastRaw}`.trim(),
     firstName,
     lastInitial
   };
@@ -1115,7 +1117,7 @@ function renderNameStep(errorMessage = "") {
           type="text"
           maxlength="40"
           autocomplete="name"
-          placeholder="First Name Last Initial"
+          placeholder="First Name Last Initial (or Last Name)"
           required
           aria-describedby="name-error"
         />
@@ -1144,7 +1146,7 @@ function renderNameStep(errorMessage = "") {
     }
 
     if (!isValidParticipantName(cleanName)) {
-      renderNameStep("Use format: First Name + Last Initial (example: Taylor M).");
+      renderNameStep("Use format: First Name + Last Initial, or First Name + Last Name if you share initials with another mentor (example: Taylor M or Taylor Martinez).");
       return;
     }
 
