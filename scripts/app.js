@@ -1311,7 +1311,7 @@ function renderRaffleStep() {
       <section class="event-info" aria-labelledby="event-info-heading">
         <div class="event-hype" aria-labelledby="event-info-heading">
           <h2 class="event-hype-title" id="event-info-heading">Welcome to Raffle Royale</h2>
-          <p class="event-hype-lead">Twenty chips. Eleven prizes. One strategy. How will you play?</p>
+          <p class="event-hype-lead">Twenty chips. Twelve prizes. One strategy. How will you play?</p>
         </div>
 
         <div class="timeline-heading-row">
@@ -1340,7 +1340,7 @@ function renderRaffleStep() {
           <span class="suit suit-club">♣</span>
         </div>
         <h2 class="prize-intro-title">👑 Meet the Prizes</h2>
-        <p class="prize-intro-lead">Eleven ways to play. How will you spend your 20 chips?</p>
+        <p class="prize-intro-lead">Twelve ways to play. How will you spend your 20 chips?</p>
       </section>
 
       <section class="card-grid" aria-label="Prize chip allocation cards">

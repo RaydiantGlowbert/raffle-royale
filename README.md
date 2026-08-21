@@ -171,7 +171,7 @@ Add these in Vercel Project Settings -> Environment Variables:
 - ORGANIZER_SESSION_TTL_SECONDS: Optional session lifetime in seconds (default is 7200)
 - RAFFLE_EVENT_ID: Event filter for shared admin retrieval (defaults to raffle-royale-2026, matching scripts/data.js SUBMISSION_CONFIG.eventId)
 - RAFFLE_PRIZE_IDS: Optional comma-separated allow-list override for server validation. If omitted, server defaults to active final-pilot prizes:
-  royal-flush-retreat,vegas-main-character,high-roller-time-bank,mentor-mvp-pack,double-down-development,brew-crew-casey,good-fortune-giveaway,wise-mentor-collection,casino-royale-collection,purr-fect-companion-pack,top-dog-pack
+  royal-flush-retreat,vegas-main-character,high-roller-time-bank,mentor-mvp-pack,double-down-development,brew-crew-casey,good-fortune-giveaway,wise-mentor-collection,casino-royale-collection,purr-fect-companion-pack,top-dog-pack,royal-ride-along
 
 Database variables remain required:
 
