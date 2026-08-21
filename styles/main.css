@@ -1101,10 +1101,6 @@ body {
   filter: saturate(1.08) contrast(1.05);
 }
 
-.prize-image[src*="royal-ride-along"] {
-  filter: saturate(0.94) sepia(0.16) contrast(1.1) brightness(0.97);
-}
-
 .prize-image.is-hidden {
   display: none;
 }
