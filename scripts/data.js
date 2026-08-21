@@ -129,7 +129,8 @@ const ALL_PRIZE_CONFIG = [
     teaser: "Brighten your workspace with owl-inspired gifts and meaningful mentor keepsakes.",
     description: "Wisdom never goes out of style. Celebrate the heart of mentoring with a thoughtfully curated collection of owl-inspired décor, mentor favorites, and meaningful keepsakes designed to brighten your workspace and remind you of the difference you make every day.",
     includes: [
-      "A curated assortment of owl-themed gifts and mentor-inspired keepsakes."
+      "A curated assortment of owl-themed gifts and mentor-inspired keepsakes.",
+      "Winning prize basket contents may vary."
     ],
     image: "assets/images/prizes/wise-mentor-collection.png",
     imageAlt: "Keepsakes badge for Wise Mentor Collection"
@@ -142,7 +143,8 @@ const ALL_PRIZE_CONFIG = [
     teaser: "Bring the excitement of the casino home with games, decor, drinkware, and Vegas-inspired accessories.",
     description: "Bring the excitement of the casino home. From game-night favorites to fun Vegas-inspired accessories, this collection is packed with surprises for anyone who loves the thrill of the casino.",
     includes: [
-      "A curated assortment of casino-themed games, décor, drinkware, and accessories."
+      "A curated assortment of casino-themed games, décor, drinkware, and accessories.",
+      "Winning prize basket contents may vary."
     ],
     image: "assets/images/prizes/casino-royale-collection.png",
     imageAlt: "Casino badge for Casino Royale Collection"
