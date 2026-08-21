@@ -20,7 +20,6 @@ const ALL_PRIZE_CONFIG = [
     teaser: "Step into the spotlight with VIP Summit perks and Vegas-themed extras worthy of a high roller.",
     description: "The Strip is calling your name. Step into the spotlight with a VIP Summit experience featuring exclusive perks and Vegas-themed goodies worthy of a high roller.",
     includes: [
-      "Reserved VIP breakfast seating one morning at Summit",
       "Crown & sash to celebrate your main character moment",
       "A $25 hotel snack basket",
       "A curated assortment of Vegas-themed souvenirs and accessories"
@@ -153,6 +152,21 @@ const ALL_PRIZE_CONFIG = [
     ],
     image: "assets/images/prizes/top-dog-pack.png",
     imageAlt: "Dog badge for Top Dog Pack"
+  },
+  {
+    id: "royal-ride-along",
+    name: "The Royal Ride Along",
+    winnerCount: 1,
+    active: true,
+    teaser: "Be the Penn to Tricia's Teller-spend a few hours behind the scenes with Senior Manager Tricia.",
+    description: "Be the Penn to Tricia's Teller. Spend a few hours behind the scenes with Senior Manager Tricia! Join her for a specially planned peek into her day, sit in on a few activities or meetings, and see what happens on the other side of the curtain. And because no royal engagement should happen on an empty stomach, you'll also get a lunch gift card and time to have lunch with Tricia and chat.",
+    includes: [
+      "A specially planned behind-the-scenes day with Senior Manager Tricia, including a few activities or meetings",
+      "A lunch gift card",
+      "Lunch and conversation with Tricia"
+    ],
+    image: "assets/images/prizes/royal-ride-along.png",
+    imageAlt: "Backstage pass badge for The Royal Ride Along with Tricia"
   },
   {
     id: "presidents-pick",

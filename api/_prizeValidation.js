@@ -9,7 +9,8 @@ const DEFAULT_PRIZE_IDS = [
   "wise-mentor-collection",
   "casino-royale-collection",
   "purr-fect-companion-pack",
-  "top-dog-pack"
+  "top-dog-pack",
+  "royal-ride-along"
 ];
 const DEFAULT_TOTAL_TICKETS = 20;
 
