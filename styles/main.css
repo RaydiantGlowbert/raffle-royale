@@ -4,9 +4,9 @@
   - Responsive card grid for desktop and mobile
 */
 :root {
-  --bg-top: #1c0f0a;
-  --bg-bottom: #3f180e;
-  --panel: rgba(23, 14, 10, 0.86);
+  --bg-top: #0a1428;
+  --bg-bottom: #142a52;
+  --panel: rgba(10, 16, 32, 0.86);
   --panel-border: rgba(245, 190, 78, 0.36);
   --text-primary: #fff9ea;
   --text-secondary: #ffddb4;
@@ -326,7 +326,7 @@ body {
 
 .ticket-summary-label {
   margin: 0;
-  font-size: 0.58rem;
+  font-size: 0.66rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -855,6 +855,19 @@ body {
   transform: translateY(-1px);
 }
 
+.primary-btn:active:enabled,
+.secondary-btn:active,
+.ticket-btn:active:enabled {
+  transform: translateY(0) scale(0.97);
+}
+
+.primary-btn:focus-visible,
+.secondary-btn:focus-visible,
+.ticket-btn:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
 .primary-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -1085,6 +1098,7 @@ body {
   object-fit: cover;
   object-position: center;
   display: block;
+  filter: saturate(1.08) contrast(1.05);
 }
 
 .prize-image.is-hidden {
@@ -1880,6 +1894,11 @@ body {
     background: linear-gradient(180deg, rgba(247, 190, 75, 0.2), rgba(247, 190, 75, 0.45), rgba(247, 190, 75, 0.2));
   }
 
+  .event-info-card {
+    min-height: 7.05rem;
+    padding: 0.74rem 0.76rem;
+  }
+
   .timeline-info-card {
     min-height: 7.35rem;
     padding-left: 2.7rem;
@@ -1892,11 +1911,6 @@ body {
     top: 0.72rem;
     width: 1.95rem;
     height: 1.95rem;
-  }
-
-  .event-info-card {
-    min-height: 7.05rem;
-    padding: 0.74rem 0.76rem;
   }
 
   .rules-callout-trigger {
