@@ -1140,6 +1140,76 @@ body {
   z-index: 2;
 }
 
+.prize-hype-badge {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  max-width: calc(100% - 1rem);
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  color: var(--cream);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: linear-gradient(180deg, rgba(181, 59, 30, 0.92), rgba(69, 9, 31, 0.9));
+  border: 1px solid rgba(247, 190, 75, 0.55);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  pointer-events: none;
+  animation: prizeHypeBadgeIn 320ms ease both;
+}
+
+.prize-reaction-toast {
+  margin: 0;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  color: var(--cream);
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: linear-gradient(180deg, rgba(247, 190, 75, 0.24), rgba(247, 190, 75, 0.08));
+  border: 1px solid rgba(247, 190, 75, 0.42);
+  pointer-events: none;
+  animation: prizeReactionToastIn 260ms ease both;
+}
+
+@keyframes prizeHypeBadgeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes prizeReactionToastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prize-hype-badge,
+  .prize-reaction-toast {
+    animation: none;
+  }
+}
+
 .prize-teaser {
   color: var(--text-secondary);
   font-size: 0.92rem;
