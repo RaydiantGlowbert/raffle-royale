@@ -133,12 +133,12 @@ function pickMessageForPrize(prizeId, usedMessages) {
 let cachedAssignments = null;
 
 /**
- * Returns a Map of prizeId -> hype message for a random subset of the given
- * prize IDs. Cached for the lifetime of the page session so the same cards
- * and messages stay put while a participant browses; a fresh page load
- * produces a new random selection.
+ * Returns a Map of prizeId -> { message, rotation, pulseDelay } for a random
+ * subset of the given prize IDs. Cached for the lifetime of the page session
+ * so the same cards, messages, and sticker rotation stay stable while a
+ * participant browses; a fresh page load produces a new random selection.
  * @param {string[]} prizeIds
- * @returns {Map<string, string>}
+ * @returns {Map<string, {message: string, rotation: number, pulseDelay: number}>}
  */
 function getHypeAssignments(prizeIds) {
   if (cachedAssignments) {
@@ -156,11 +156,37 @@ function getHypeAssignments(prizeIds) {
   const assignments = new Map();
 
   selected.forEach((prizeId) => {
-    assignments.set(prizeId, pickMessageForPrize(prizeId, usedMessages));
+    assignments.set(prizeId, {
+      message: pickMessageForPrize(prizeId, usedMessages),
+      rotation: Number((Math.random() * 6 - 3).toFixed(2)), // -3deg to +3deg, stable per session
+      pulseDelay: Number((Math.random() * 5).toFixed(2)) // staggers the periodic glow across badges
+    });
   });
 
   cachedAssignments = assignments;
   return assignments;
+}
+
+/**
+ * Splits a hype message into a big "primary" phrase and an optional smaller
+ * "secondary" phrase for emphasis, using ": " as the natural break point
+ * when present (e.g. "Plot twist: maybe this one?"). Messages without that
+ * pattern are returned as a single primary phrase with no secondary line.
+ * @param {string} message
+ * @returns {{primary: string, secondary: string}}
+ */
+function splitHypeMessage(message) {
+  const text = String(message || "");
+  const separatorIndex = text.indexOf(": ");
+
+  if (separatorIndex === -1) {
+    return { primary: text, secondary: "" };
+  }
+
+  return {
+    primary: text.slice(0, separatorIndex).trim(),
+    secondary: text.slice(separatorIndex + 1).trim()
+  };
 }
 
 /**
@@ -173,6 +199,7 @@ function getRandomReactionMessage() {
 
 window.RaffleRoyaleHype = {
   getHypeAssignments,
+  splitHypeMessage,
   getRandomReactionMessage
 };
 
@@ -181,6 +208,7 @@ window.RaffleRoyaleHypeTestHooks = {
   HYPE_PRIZE_MESSAGES,
   HYPE_REACTION_MESSAGES,
   pickMessageForPrize,
+  splitHypeMessage,
   getHypeAssignments,
   getRandomReactionMessage
 };

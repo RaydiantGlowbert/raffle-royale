@@ -103,6 +103,38 @@ function togglePrizeCardFlip(prizeId) {
   }
 }
 
+/**
+ * Builds the markup for a single "sticker" hype badge, splitting the message
+ * into a big/small emphasis pair when the message data supports it. Returns
+ * an empty string when there is no assignment for this prize.
+ * @param {{message: string, rotation: number, pulseDelay: number} | undefined} assignment
+ * @returns {string}
+ */
+function buildHypeBadgeMarkup(assignment) {
+  if (!assignment || !assignment.message) {
+    return "";
+  }
+
+  const parts = typeof window.RaffleRoyaleHype !== "undefined"
+    ? window.RaffleRoyaleHype.splitHypeMessage(assignment.message)
+    : { primary: assignment.message, secondary: "" };
+
+  const secondaryMarkup = parts.secondary
+    ? `<span class="prize-hype-badge-secondary">${escapeHtml(parts.secondary)}</span>`
+    : "";
+
+  return `
+    <span
+      class="prize-hype-badge"
+      aria-hidden="true"
+      style="--hype-rotate: ${Number(assignment.rotation || 0)}deg; --hype-pulse-delay: ${Number(assignment.pulseDelay || 0)}s;"
+    >
+      <span class="prize-hype-badge-primary">${escapeHtml(parts.primary)}</span>
+      ${secondaryMarkup}
+    </span>
+  `;
+}
+
 const EVENT_TIMELINE_ITEMS = [
   {
     id: "timeline-kickoff",
@@ -1221,7 +1253,8 @@ function renderRaffleStep() {
       ? includesItems.map((item) => `<li>${escapeHtml(item)}</li>`).join("")
       : "<li>Details coming soon.</li>";
     const teaserText = escapeHtml(prize.teaser || prize.description || "Placeholder prize package.");
-    const hypeMessage = hypeAssignments.get(prize.id);
+    const hypeAssignment = hypeAssignments.get(prize.id);
+    const hypeBadgeMarkup = buildHypeBadgeMarkup(hypeAssignment);
     const showReaction = state.reactionPrizeId === prize.id && Boolean(state.reactionMessage);
 
     return `
@@ -1229,6 +1262,7 @@ function renderRaffleStep() {
         <div class="prize-card-inner">
           <section class="prize-face prize-face-front" aria-hidden="${isFlipped ? "true" : "false"}"${isFlipped ? " inert" : ""}>
             <div class="prize-front-content">
+              ${hypeBadgeMarkup}
               <div class="prize-media">
                 <img
                   class="prize-image"
@@ -1239,7 +1273,6 @@ function renderRaffleStep() {
                   onerror="this.classList.add('is-hidden'); this.setAttribute('aria-hidden', 'true');"
                 />
                 <span class="winner-count" aria-label="${Number(prize.winnerCount || 0)} ${Number(prize.winnerCount || 0) === 1 ? "winner" : "winners"}">${Number(prize.winnerCount || 0)} ${Number(prize.winnerCount || 0) === 1 ? "Winner" : "Winners"}</span>
-                ${hypeMessage ? `<span class="prize-hype-badge" aria-hidden="true">${escapeHtml(hypeMessage)}</span>` : ""}
               </div>
               <h2 class="prize-name">${escapeHtml(prize.name)}</h2>
               <p class="prize-teaser">${teaserText}</p>
