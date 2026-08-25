@@ -36,28 +36,10 @@ const state = {
   openEventInfoPanelId: "",
   isImportantRulesOpen: false,
   suppressEventInfoFocusOpenForId: "",
-  reactionPrizeId: "",
-  reactionMessage: "",
   notice: ""
 };
 
 const appRoot = document.getElementById("app");
-
-// Chance that opening/flipping a prize card triggers a brief playful
-// "reaction" toast (see scripts/hype.js). Intentionally not every flip, per
-// the "occasionally" behavior requested for this feature.
-const HYPE_REACTION_CHANCE = 0.4;
-const HYPE_REACTION_SHOW_DELAY_MS = 450;
-const HYPE_REACTION_VISIBLE_MS = 2600;
-let hypeReactionShowTimer = null;
-let hypeReactionHideTimer = null;
-
-function clearHypeReactionTimers() {
-  clearTimeout(hypeReactionShowTimer);
-  clearTimeout(hypeReactionHideTimer);
-  hypeReactionShowTimer = null;
-  hypeReactionHideTimer = null;
-}
 
 function resetEntryState() {
   state.name = "";
@@ -71,9 +53,6 @@ function resetEntryState() {
   state.openEventInfoPanelId = "";
   state.isImportantRulesOpen = false;
   state.suppressEventInfoFocusOpenForId = "";
-  clearHypeReactionTimers();
-  state.reactionPrizeId = "";
-  state.reactionMessage = "";
 }
 
 function togglePrizeCardFlip(prizeId) {
@@ -83,56 +62,6 @@ function togglePrizeCardFlip(prizeId) {
 
   const wasFlipped = state.flippedPrizeId === prizeId;
   state.flippedPrizeId = wasFlipped ? "" : prizeId;
-
-  clearHypeReactionTimers();
-  state.reactionPrizeId = "";
-  state.reactionMessage = "";
-
-  if (!wasFlipped && typeof window.RaffleRoyaleHype !== "undefined" && Math.random() < HYPE_REACTION_CHANCE) {
-    hypeReactionShowTimer = setTimeout(() => {
-      state.reactionPrizeId = prizeId;
-      state.reactionMessage = window.RaffleRoyaleHype.getRandomReactionMessage();
-      render();
-
-      hypeReactionHideTimer = setTimeout(() => {
-        state.reactionPrizeId = "";
-        state.reactionMessage = "";
-        render();
-      }, HYPE_REACTION_VISIBLE_MS);
-    }, HYPE_REACTION_SHOW_DELAY_MS);
-  }
-}
-
-/**
- * Builds the markup for a single "sticker" hype badge, splitting the message
- * into a big/small emphasis pair when the message data supports it. Returns
- * an empty string when there is no assignment for this prize.
- * @param {{message: string, rotation: number, pulseDelay: number} | undefined} assignment
- * @returns {string}
- */
-function buildHypeBadgeMarkup(assignment) {
-  if (!assignment || !assignment.message) {
-    return "";
-  }
-
-  const parts = typeof window.RaffleRoyaleHype !== "undefined"
-    ? window.RaffleRoyaleHype.splitHypeMessage(assignment.message)
-    : { primary: assignment.message, secondary: "" };
-
-  const secondaryMarkup = parts.secondary
-    ? `<span class="prize-hype-badge-secondary">${escapeHtml(parts.secondary)}</span>`
-    : "";
-
-  return `
-    <span
-      class="prize-hype-badge"
-      aria-hidden="true"
-      style="--hype-rotate: ${Number(assignment.rotation || 0)}deg; --hype-pulse-delay: ${Number(assignment.pulseDelay || 0)}s;"
-    >
-      <span class="prize-hype-badge-primary">${escapeHtml(parts.primary)}</span>
-      ${secondaryMarkup}
-    </span>
-  `;
 }
 
 const EVENT_TIMELINE_ITEMS = [
@@ -1241,9 +1170,6 @@ function renderRaffleStep() {
   const remaining = getRemainingTickets();
   const totalAllocated = getTotalAllocated();
   const readyForReview = remaining === 0 && !allocationsLocked;
-  const hypeAssignments = typeof window.RaffleRoyaleHype !== "undefined"
-    ? window.RaffleRoyaleHype.getHypeAssignments(PRIZES.map((prize) => prize.id))
-    : new Map();
 
   const cardsMarkup = PRIZES.map((prize) => {
     const count = state.allocations[prize.id];
@@ -1253,16 +1179,12 @@ function renderRaffleStep() {
       ? includesItems.map((item) => `<li>${escapeHtml(item)}</li>`).join("")
       : "<li>Details coming soon.</li>";
     const teaserText = escapeHtml(prize.teaser || prize.description || "Placeholder prize package.");
-    const hypeAssignment = hypeAssignments.get(prize.id);
-    const hypeBadgeMarkup = buildHypeBadgeMarkup(hypeAssignment);
-    const showReaction = state.reactionPrizeId === prize.id && Boolean(state.reactionMessage);
 
     return `
       <article class="prize-card ${isFlipped ? "is-flipped" : ""}" data-prize-card data-prize-id="${prize.id}">
         <div class="prize-card-inner">
           <section class="prize-face prize-face-front" aria-hidden="${isFlipped ? "true" : "false"}"${isFlipped ? " inert" : ""}>
             <div class="prize-front-content">
-              ${hypeBadgeMarkup}
               <div class="prize-media">
                 <img
                   class="prize-image"
@@ -1319,7 +1241,6 @@ function renderRaffleStep() {
 
           <section class="prize-face prize-face-back" aria-hidden="${isFlipped ? "false" : "true"}"${isFlipped ? "" : " inert"}>
             <h2 class="prize-name">${escapeHtml(prize.name)}</h2>
-            ${showReaction ? `<p class="prize-reaction-toast" role="status">${escapeHtml(state.reactionMessage)}</p>` : ""}
             <h3 class="prize-includes-heading">Included in This Prize</h3>
             <div class="prize-back-content">
               <ul class="prize-includes-list" aria-label="Included items for ${escapeHtml(prize.name)}">
@@ -1471,9 +1392,6 @@ function renderRaffleStep() {
     button.addEventListener("click", (event) => {
       event.stopPropagation();
       state.flippedPrizeId = "";
-      clearHypeReactionTimers();
-      state.reactionPrizeId = "";
-      state.reactionMessage = "";
       render();
     });
   });
